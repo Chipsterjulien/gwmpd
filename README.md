@@ -8,6 +8,7 @@ There are 2 parts:
 ## Dependencies
 * go
 * gin
+* cors (middleware)
 * foundation
 * vuejs
 
