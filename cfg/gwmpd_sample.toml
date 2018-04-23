@@ -1,9 +1,0 @@
-# logtype can take: debug, info, notice, warning, error, critical
-logtype = "debug"
-
-[mpdserver]
-ip = "192.168.1.1"
-port = 6600
-
-[ginserver]
-port = 8060
