@@ -15,10 +15,11 @@
       </div>
     </div>
     <div class="">
-      <button type="button" name="back">Arrière</button>
-      <button type="button" name="stop">Stop</button>
-      <button type="button" name="play">Jouer</button>
-      <button type="button" name="forward">Avant</button>
+      <button type="button" name="back" @click="back">Arrière</button>
+      <button type="button" name="stop" @click="stop">Stop</button>
+      <button type="button" name="play" @click="play" v-if="!songPlayed">Jouer</button>
+      <button type="button" name="pause" @click="pause" v-if="songPlayed">Pause</button>
+      <button type="button" name="forward" @click="forward">Avant</button>
     </div>
     <div class="">
       <router-view/>
@@ -35,22 +36,38 @@ export default {
       appName: 'Gwmpd',
       stat: [],
       connected: false,
+      songPlayed: false,
       user: {}
     }
   },
   methods: {
+    back () {
+      console.log('back')
+    },
+    stop () {
+      console.log('stop')
+    },
+    play () {
+      console.log('play')
+    },
+    pause () {
+      console.log('pause')
+    },
+    forward () {
+      console.log('forward')
+    }
   },
   mounted () {
     this.$stateMPD = this.$resource('v1/stateMPD')
     this.$stateMPD.query().then((response) => {
       this.user = response.data
       this.connected = true
-      // console.log('Nom: ', this.user.Name)
-
-      // console.log("J'ai reçu une réponse", response)
+      if (this.user.state === 'play') {
+        this.songPlayed = true
+      } else {
+        this.songPlayed = false
+      }
     }, (response) => {
-      // console.log("Je n'ai rien reçu d'intéressant", response)
-      this.connected = false
     })
   },
   beforeUpdate () {
