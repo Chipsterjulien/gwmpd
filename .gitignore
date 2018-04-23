@@ -1,3 +1,4 @@
+*.log
 gwmpd_back/*.log
 gwmpd_front/node_modules/*
 gwmpd_front/yarn.lock
