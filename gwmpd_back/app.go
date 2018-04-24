@@ -66,6 +66,9 @@ type mpdInfos struct {
 	volume         int
 }
 
+// func (e *com) changeMPD(c *gin.Context) {
+// }
+
 func (e *com) getStatMPD(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("currentsong")
 	<-e.permissionToSendAtVue
@@ -109,6 +112,14 @@ func (e *com) getStatMPD(c *gin.Context) {
 	})
 }
 
+func (e *com) getPreviousSong(c *gin.Context) {
+	e.sendCmdToMPDChan <- []byte("previous")
+}
+
+func (e *com) getNextSong(c *gin.Context) {
+	e.sendCmdToMPDChan <- []byte("next")
+}
+
 func initGin(com *com) {
 	log := logging.MustGetLogger("log")
 
@@ -130,6 +141,9 @@ func initGin(com *com) {
 	v1 := g.Group("/v1")
 	{
 		v1.GET("/stateMPD", com.getStatMPD)
+		v1.GET("/PreviousSong", com.getPreviousSong)
+		v1.GET("/nextSong", com.getNextSong)
+		// v1.PUT("/changeMPD", com.changeMPD)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))

@@ -41,8 +41,14 @@ export default {
     }
   },
   methods: {
-    back () {
-      console.log('back')
+    previous () {
+      console.log('previous')
+      this.$nextSong = this.$resource('v1/previousSong')
+      this.$nextSong.query().then((response) => {
+        console.log('avoir réponse de previousSong')
+      }, (response) => {
+        console.log('pas avoir la réponse de previousSong')
+      })
     },
     stop () {
       console.log('stop')
@@ -55,6 +61,12 @@ export default {
     },
     forward () {
       console.log('forward')
+      this.$nextSong = this.$resource('v1/nextSong')
+      this.$nextSong.query().then((response) => {
+        console.log('avoir réponse de nextSong')
+      }, (response) => {
+        console.log('pas avoir la réponse de nextSong')
+      })
     }
   },
   mounted () {

@@ -2,7 +2,7 @@
 logtype = "debug"
 
 [mpdserver]
-ip = "192.168.1.1"
+ip = "localhost"
 port = 6600
 
 [ginserver]
