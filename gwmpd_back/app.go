@@ -36,11 +36,14 @@ type mpdInfos struct {
 	albums         int
 	artist         string
 	artists        int
+	audio          string
+	bitrate        string
 	consume        bool
 	date           string
 	dbPlaytime     string
 	dbUpdate       string
 	duration       float64
+	elapsed        float64
 	file           string
 	genre          string
 	id             int
@@ -60,8 +63,10 @@ type mpdInfos struct {
 	song           int
 	songs          int
 	songID         int
-	time           string
+	timeSong       string
+	timeElapsed    string
 	title          string
+	track          int
 	uptime         string
 	volume         int
 }
@@ -81,11 +86,14 @@ func (e *com) getStatMPD(c *gin.Context) {
 		"albums":         e.info.albums,
 		"artist":         e.info.artist,
 		"artists":        e.info.artists,
+		"audio":          e.info.audio,
+		"bitrate":        e.info.bitrate,
 		"consume":        e.info.consume,
 		"date":           e.info.date,
 		"dbplaytime":     e.info.dbPlaytime,
 		"dbupdate":       e.info.dbUpdate,
 		"duration":       e.info.duration,
+		"elapsed":        e.info.elapsed,
 		"file":           e.info.file,
 		"genre":          e.info.genre,
 		"id":             e.info.id,
@@ -105,8 +113,10 @@ func (e *com) getStatMPD(c *gin.Context) {
 		"song":           e.info.song,
 		"songs":          e.info.songs,
 		"songid":         e.info.songID,
-		"time":           e.info.time,
+		"TimeSong":       e.info.timeSong,
+		"timeElapsed":    e.info.timeElapsed,
 		"title":          e.info.title,
+		"track":          e.info.track,
 		"uptime":         e.info.uptime,
 		"volume":         e.info.volume,
 	})
@@ -114,10 +124,32 @@ func (e *com) getStatMPD(c *gin.Context) {
 
 func (e *com) getPreviousSong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("previous")
+	<-e.permissionToSendAtVue
+	c.JSON(200, gin.H{"previousSong": "ok"})
 }
 
 func (e *com) getNextSong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("next")
+	<-e.permissionToSendAtVue
+	c.JSON(200, gin.H{"nextSong": "ok"})
+}
+
+func (e *com) getStopSong(c *gin.Context) {
+	e.sendCmdToMPDChan <- []byte("stop")
+	<-e.permissionToSendAtVue
+	c.JSON(200, gin.H{"stopSong": "ok"})
+}
+
+func (e *com) getPlaySong(c *gin.Context) {
+	e.sendCmdToMPDChan <- []byte("play")
+	<-e.permissionToSendAtVue
+	c.JSON(200, gin.H{"playSong": "ok"})
+}
+
+func (e *com) getPauseSong(c *gin.Context) {
+	e.sendCmdToMPDChan <- []byte("pause")
+	<-e.permissionToSendAtVue
+	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
 func initGin(com *com) {
@@ -141,8 +173,11 @@ func initGin(com *com) {
 	v1 := g.Group("/v1")
 	{
 		v1.GET("/stateMPD", com.getStatMPD)
-		v1.GET("/PreviousSong", com.getPreviousSong)
+		v1.GET("/previousSong", com.getPreviousSong)
 		v1.GET("/nextSong", com.getNextSong)
+		v1.GET("/stopSong", com.getStopSong)
+		v1.GET("/playSong", com.getPlaySong)
+		v1.GET("/pauseSong", com.getPauseSong)
 		// v1.PUT("/changeMPD", com.changeMPD)
 	}
 
@@ -230,7 +265,6 @@ func writeProcess(sendCmdToMPDChan <-chan []byte, socket net.Conn) {
 	}
 }
 
-// func eventManagement(mpdResponseChan <-chan []byte, sendCmdToMPDChan chan<- []byte, permissionToSendAtVue chan<- bool) {
 func eventManagement(com *com, permissionToSendAtVue chan<- bool) {
 	ticker := time.NewTicker(55 * time.Second)
 	sendPing := false
@@ -263,119 +297,16 @@ func event(com *com, permissionToSendAtVue chan<- bool, sendPing *bool, line *[]
 			permissionToSendAtVue <- true
 		}
 		return
+	} else if bytes.Contains(*line, []byte("ACK")) {
+		permissionToSendAtVue <- true
+		return
 	}
 
 	lineSplitted := strings.Split(string(*line), ":")
 	end := strings.TrimLeft(strings.Join(lineSplitted[1:], ":"), " ")
 	switch lineSplitted[0] {
-	case "file":
-		com.info.file = end
-	case "Last-Modified":
-		com.info.lastModified = end
-	case "Artist":
-		com.info.title = end
 	case "Album":
 		com.info.album = end
-	case "Date":
-		com.info.date = end
-	case "Genre":
-		com.info.genre = end
-	case "Time":
-		com.info.time = end
-	case "duration":
-		f, err := strconv.ParseFloat(end, 64)
-		if err != nil {
-			log.Warningf("Unable to convert \"duration\" %s", end)
-			return
-		}
-		com.info.duration = f
-	case "Pos":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"Pos\" %s", end)
-			return
-		}
-		com.info.pos = i
-	case "Id":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"Id\" %s", end)
-			return
-		}
-		com.info.id = i
-	case "volume":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"volume\" %s", end)
-			return
-		}
-		com.info.volume = i
-	case "repeat":
-		if end == "1" {
-			com.info.repeat = true
-		} else {
-			com.info.repeat = false
-		}
-	case "random":
-		if end == "1" {
-			com.info.random = true
-		} else {
-			com.info.random = false
-		}
-	case "single":
-		if end == "1" {
-			com.info.single = true
-		} else {
-			com.info.single = false
-		}
-	case "consume":
-		if end == "1" {
-			com.info.consume = true
-		} else {
-			com.info.consume = false
-		}
-	case "playlist":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"playlist\" %s", end)
-			return
-		}
-		com.info.playlist = i
-	case "playlistlength":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"playlistlength\" %s", end)
-			return
-		}
-		com.info.playlistLength = i
-	case "state":
-		com.info.state = end
-	case "song":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"song\" %s", end)
-			return
-		}
-		com.info.song = i
-	case "songid":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Debug("coin")
-			log.Warningf("Unable to convert \"songid\" %s", end)
-			return
-		}
-		com.info.songID = i
-	case "uptime":
-		com.info.uptime = end
-	case "playtime":
-		com.info.playtime = end
-	case "artists":
-		i, err := strconv.Atoi(end)
-		if err != nil {
-			log.Warningf("Unable to convert \"artists\" %s", end)
-			return
-		}
-		com.info.artists = i
 	case "albums":
 		i, err := strconv.Atoi(end)
 		if err != nil {
@@ -383,19 +314,58 @@ func event(com *com, permissionToSendAtVue chan<- bool, sendPing *bool, line *[]
 			return
 		}
 		com.info.albums = i
-	case "songs":
+	case "Artist":
+		com.info.artist = end
+	case "artists":
 		i, err := strconv.Atoi(end)
 		if err != nil {
-			log.Warningf("Unable to convert \"songs\" %s", end)
+			log.Warningf("Unable to convert \"artists\" %s", end)
 			return
 		}
-		com.info.songs = i
+		com.info.artists = i
+	case "audio":
+		com.info.audio = end
+	case "bitrate":
+		com.info.bitrate = end
+	case "consume":
+		if end == "1" {
+			com.info.consume = true
+		} else {
+			com.info.consume = false
+		}
+	case "Date":
+		com.info.date = end
 	case "db_playtime":
 		com.info.dbPlaytime = end
 	case "db_update":
 		com.info.dbUpdate = end
-	case "Name":
-		com.info.name = end
+	case "duration":
+		f, err := strconv.ParseFloat(end, 64)
+		if err != nil {
+			log.Warningf("Unable to convert \"duration\" %s", end)
+			return
+		}
+		com.info.duration = f
+	case "elapsed":
+		f, err := strconv.ParseFloat(end, 64)
+		if err != nil {
+			log.Warningf("Unable to convert \"elapsed\" %s", end)
+			return
+		}
+		com.info.elapsed = f
+	case "file":
+		com.info.file = end
+	case "Genre":
+		com.info.genre = end
+	case "Id":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"Id\" %s", end)
+			return
+		}
+		com.info.id = i
+	case "Last-Modified":
+		com.info.lastModified = end
 	case "mixrampdb":
 		f, err := strconv.ParseFloat(end, 64)
 		if err != nil {
@@ -403,6 +373,8 @@ func event(com *com, permissionToSendAtVue chan<- bool, sendPing *bool, line *[]
 			return
 		}
 		com.info.mixrampDB = f
+	case "Name":
+		com.info.name = end
 	case "nextsong":
 		i, err := strconv.Atoi(end)
 		if err != nil {
@@ -417,6 +389,93 @@ func event(com *com, permissionToSendAtVue chan<- bool, sendPing *bool, line *[]
 			return
 		}
 		com.info.nextSongID = i
+	case "playlist":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"playlist\" %s", end)
+			return
+		}
+		com.info.playlist = i
+	case "playlistlength":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"playlistlength\" %s", end)
+			return
+		}
+		com.info.playlistLength = i
+	case "playtime":
+		com.info.playtime = end
+	case "Pos":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"Pos\" %s", end)
+			return
+		}
+		com.info.pos = i
+	case "random":
+		if end == "1" {
+			com.info.random = true
+		} else {
+			com.info.random = false
+		}
+	case "repeat":
+		if end == "1" {
+			com.info.repeat = true
+		} else {
+			com.info.repeat = false
+		}
+	case "single":
+		if end == "1" {
+			com.info.single = true
+		} else {
+			com.info.single = false
+		}
+	case "song":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"song\" %s", end)
+			return
+		}
+		com.info.song = i
+	case "songs":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"songs\" %s", end)
+			return
+		}
+		com.info.songs = i
+	case "songid":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Debug("coin")
+			log.Warningf("Unable to convert \"songid\" %s", end)
+			return
+		}
+		com.info.songID = i
+	case "state":
+		com.info.state = end
+	case "Time":
+		com.info.timeSong = end
+	case "time":
+		com.info.timeElapsed = end
+	case "Title":
+		com.info.title = end
+	case "Track":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"Track\" %s", end)
+			return
+		}
+		com.info.track = i
+	case "uptime":
+		com.info.uptime = end
+	case "volume":
+		i, err := strconv.Atoi(end)
+		if err != nil {
+			log.Warningf("Unable to convert \"volume\" %s", end)
+			return
+		}
+		com.info.volume = i
 	default:
 		log.Errorf("Unknown: \"%s\"\n", lineSplitted[0])
 	}
