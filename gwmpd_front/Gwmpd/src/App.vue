@@ -15,7 +15,7 @@
       </div>
     </div>
     <div class="">
-      <button type="button" name="back" @click="back">Arrière</button>
+      <button type="button" name="previous" @click="previous">Arrière</button>
       <button type="button" name="stop" @click="stop">Stop</button>
       <button type="button" name="play" @click="play" v-if="!songPlayed">Jouer</button>
       <button type="button" name="pause" @click="pause" v-if="songPlayed">Pause</button>
@@ -34,47 +34,66 @@ export default {
   data () {
     return {
       appName: 'Gwmpd',
-      stat: [],
+      // stat: [],
       connected: false,
       songPlayed: false,
-      user: {}
+      player: {}
     }
   },
   methods: {
     previous () {
-      console.log('previous')
-      this.$nextSong = this.$resource('v1/previousSong')
-      this.$nextSong.query().then((response) => {
-        console.log('avoir réponse de previousSong')
+      this.$previousSong = this.$resource('v1/previousSong')
+      this.$previousSong.get().then((response) => {
+        // success callback
       }, (response) => {
-        console.log('pas avoir la réponse de previousSong')
+        // error callback
       })
     },
     stop () {
-      console.log('stop')
+      // Prévoir d'arrêter le ticker créé dans play()
+      this.$stopSong = this.$resource('v1/stopSong')
+      this.$stopSong.get().then((response) => {
+        this.player.state = 'stop'
+        this.songPlayed = false
+      }, (response) => {
+        // error callback
+      })
     },
     play () {
-      console.log('play')
+      // Créer un ticker
+      this.$playSong = this.$resource('v1/playSong')
+      this.$playSong.get().then((response) => {
+        this.player.state = 'play'
+        this.songPlayed = true
+      }, (response) => {
+        // error callback
+      })
     },
     pause () {
-      console.log('pause')
+      // Prévoir d'arrêter le ticker créé dans play()
+      this.$pauseSong = this.$resource('v1/pauseSong')
+      this.$pauseSong.get().then((response) => {
+        this.player.state = 'pause'
+        this.songPlayed = false
+      }, (response) => {
+        // error callback
+      })
     },
     forward () {
-      console.log('forward')
       this.$nextSong = this.$resource('v1/nextSong')
-      this.$nextSong.query().then((response) => {
-        console.log('avoir réponse de nextSong')
+      this.$nextSong.get().then((response) => {
+        // success callback
       }, (response) => {
-        console.log('pas avoir la réponse de nextSong')
+        // error callback
       })
     }
   },
   mounted () {
     this.$stateMPD = this.$resource('v1/stateMPD')
     this.$stateMPD.query().then((response) => {
-      this.user = response.data
+      this.player = response.data
       this.connected = true
-      if (this.user.state === 'play') {
+      if (this.player.state === 'play') {
         this.songPlayed = true
       } else {
         this.songPlayed = false
