@@ -213,7 +213,6 @@ func initGin(com *com) {
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.POST("/changeVolume", com.setChangeVolume)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
-		// v1.PUT("/changeMPD", com.changeMPD)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
