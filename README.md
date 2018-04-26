@@ -35,6 +35,6 @@ yarn
 yarn start
 ```
 
-Start your brother to [http://localhost:8080](http://localhost:8080)
+Start your browser to [http://localhost:8080](http://localhost:8080)
 
 ## Config
