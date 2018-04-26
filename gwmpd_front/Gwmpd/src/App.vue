@@ -15,11 +15,11 @@
       </div>
     </div>
     <div class="">
-      <button type="button" name="previousSong" @click="previousSong">Arrière</button>
+      <button type="button" name="previousSong" @click="previousSong">Previous</button>
       <button type="button" name="stopSong" @click="stopSong">Stop</button>
-      <button type="button" name="playSong" @click="playSong" v-if="!songPlayed">Jouer</button>
+      <button type="button" name="playSong" @click="playSong" v-if="!songPlayed">Play</button>
       <button type="button" name="pauseSong" @click="pauseSong" v-if="songPlayed">Pause</button>
-      <button type="button" name="forwardSong" @click="forwardSong">Avant</button>
+      <button type="button" name="forwardSong" @click="forwardSong">Forward</button>
     </div>
     <div class="">
       <!-- Volume du song -->
@@ -27,9 +27,9 @@
         Volume: {{ player.volume }}
       </div>
       <div class="">
-        <button type="button" name="muteVolume" @click="toggleMuteVolume">Sourdine</button>
-        <button type="button" name="lessVolume" @click="lessVolume">Moins</button>
-        <button type="button" name="moreVolume" @click="moreVolume">Plus</button>
+        <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>
+        <button type="button" name="lessVolume" @click="lessVolume">Less</button>
+        <button type="button" name="moreVolume" @click="moreVolume">More</button>
       </div>
     </div>
     <div class="">
@@ -105,10 +105,14 @@ export default {
     },
     playSong () {
       this.$interval = setInterval(() => {
-        // Mettre des choses ici pour faire un appel et obtenir toutes les stats
         this.$stateMPD = this.$resource('v1/stateMPD')
         this.$stateMPD.get().then((response) => {
           this.player = response.data
+
+          if (this.player.state !== 'play') {
+            clearInterval(this.$interval)
+            this.songPlayed = false
+          }
         })
       }, 1000)
       this.$playSong = this.$resource('v1/playSong')
@@ -146,6 +150,16 @@ export default {
       this.connected = true
       if (this.player.state === 'play') {
         this.songPlayed = true
+        this.$interval = setInterval(() => {
+          this.$stateMPD = this.$resource('v1/stateMPD')
+          this.$stateMPD.get().then((response) => {
+            this.player = response.data
+            if (this.player.state !== 'play') {
+              clearInterval(this.$interval)
+              this.songPlayed = false
+            }
+          })
+        }, 1000)
       } else {
         this.songPlayed = false
       }
@@ -153,6 +167,11 @@ export default {
     })
   },
   beforeUpdate () {
+  },
+  destroy () {
+    if (this.$interval) {
+      clearInterval(this.$interval)
+    }
   }
 }
 </script>
