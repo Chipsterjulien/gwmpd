@@ -69,6 +69,11 @@ type mpdInfos struct {
 	track          int
 	uptime         string
 	volume         int
+	volumeSav      int
+}
+
+type volumeForm struct {
+	Volume int `form:"volume" binding:"required"`
 }
 
 // func (e *com) changeMPD(c *gin.Context) {
@@ -152,6 +157,34 @@ func (e *com) getPauseSong(c *gin.Context) {
 	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
+func (e *com) setChangeVolume(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var vol volumeForm
+
+	if err := c.ShouldBind(&vol); err == nil {
+		e.info.volume = vol.Volume
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
+		<-e.permissionToSendAtVue
+		c.JSON(200, gin.H{"setVolume": "ok"})
+	} else {
+		log.Warningf("Unable to set volume to \"%v\": %s", vol.Volume, err)
+	}
+}
+
+func (e *com) toggleMuteVolume(c *gin.Context) {
+	if e.info.volume == 0 {
+		e.info.volume = e.info.volumeSav
+		e.info.volumeSav = 0
+	} else {
+		e.info.volumeSav = e.info.volume
+		e.info.volume = 0
+	}
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.volume))
+	<-e.permissionToSendAtVue
+	fmt.Println(e.info.volume)
+	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.volume})
+}
+
 func initGin(com *com) {
 	log := logging.MustGetLogger("log")
 
@@ -178,6 +211,8 @@ func initGin(com *com) {
 		v1.GET("/stopSong", com.getStopSong)
 		v1.GET("/playSong", com.getPlaySong)
 		v1.GET("/pauseSong", com.getPauseSong)
+		v1.POST("/changeVolume", com.setChangeVolume)
+		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
 		// v1.PUT("/changeMPD", com.changeMPD)
 	}
 
