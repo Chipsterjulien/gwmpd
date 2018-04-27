@@ -52,31 +52,22 @@ export default {
   },
   methods: {
     lessVolume () {
-      let volTmp = this.player.volume
-      volTmp -= 5
-      if (volTmp < 0) {
-        volTmp = 0
-      }
-
-      if (volTmp !== this.player.volume) {
-        this.$changeVolume = this.$resource('v1/changeVolume')
-        this.$changeVolume.save({volume: volTmp}).then((response) => {
-          this.player.volume -= 5
-        })
-      }
+      this.$changeVolume = this.$resource('v1/changeVolume')
+      this.$changeVolume.save({volume: this.player.volume - 5}).then((response) => {
+        this.player.volume -= 5
+        if (this.player.volume < 0) {
+          this.player.volume = 0
+        }
+      })
     },
     moreVolume () {
-      let volTmp = this.player.volume
-      volTmp += 5
-      if (volTmp > 100) {
-        volTmp = 100
-      }
-      if (volTmp !== this.player.volume) {
-        this.$changeVolume = this.$resource('v1/changeVolume')
-        this.$changeVolume.save({volume: volTmp}).then((response) => {
-          this.player.volume += 5
-        })
-      }
+      this.$changeVolume = this.$resource('v1/changeVolume')
+      this.$changeVolume.save({volume: this.player.volume + 5}).then((response) => {
+        this.player.volume += 5
+        if (this.player.volume > 100) {
+          this.player.volume = 100
+        }
+      })
     },
     toggleMuteVolume () {
       this.$toggleVolume = this.$resource('v1/toggleMuteVolume')
@@ -86,92 +77,80 @@ export default {
     },
     forwardSong () {
       this.$nextSong = this.$resource('v1/nextSong')
-      this.$nextSong.get().then((response) => {
-        // success callback
-      }, (response) => {
-        // error callback
-      })
+      this.$nextSong.get()
     },
     pauseSong () {
-      // Prévoir d'arrêter le ticker créé dans play()
-      this.$pauseSong = this.$resource('v1/pauseSong')
-      this.$pauseSong.get().then((response) => {
-        this.player.state = 'pause'
-        this.songPlayed = false
-        clearInterval(this.$interval)
-      }, (response) => {
-        // error callback
-      })
+      if (this.player.state !== 'pause') {
+        this.$pauseSong = this.$resource('v1/pauseSong')
+        this.$pauseSong.get().then((response) => {
+          this.player.state = 'pause'
+          this.songPlayed = false
+        })
+      }
     },
     playSong () {
-      this.$interval = setInterval(() => {
-        this.$stateMPD = this.$resource('v1/stateMPD')
+      if (this.player.state !== 'play') {
+        this.$stateMPD = this.$resource('v1/playSong')
         this.$stateMPD.get().then((response) => {
-          this.player = response.data
-
-          if (this.player.state !== 'play') {
-            clearInterval(this.$interval)
-            this.songPlayed = false
-          }
+          this.player.state = 'play'
+          this.songPlayed = true
         })
-      }, 1000)
-      this.$playSong = this.$resource('v1/playSong')
-      this.$playSong.get().then((response) => {
-        this.player.state = 'play'
-        this.songPlayed = true
-      }, (response) => {
-        // error callback
-      })
+      }
     },
     previousSong () {
       this.$previousSong = this.$resource('v1/previousSong')
-      this.$previousSong.get().then((response) => {
-        // success callback
-      }, (response) => {
-        // error callback
-      })
+      this.$previousSong.get()
     },
     stopSong () {
-      // Prévoir d'arrêter le ticker créé dans play()
       this.$stopSong = this.$resource('v1/stopSong')
       this.$stopSong.get().then((response) => {
         this.player.state = 'stop'
         this.songPlayed = false
-        clearInterval(this.$interval)
-      }, (response) => {
-        // error callback
       })
     }
   },
   mounted () {
-    this.$stateMPD = this.$resource('v1/stateMPD')
-    this.$stateMPD.get().then((response) => {
-      this.player = response.data
-      this.connected = true
-      if (this.player.state === 'play') {
-        this.songPlayed = true
-        this.$interval = setInterval(() => {
-          this.$stateMPD = this.$resource('v1/stateMPD')
-          this.$stateMPD.get().then((response) => {
-            this.player = response.data
-            if (this.player.state !== 'play') {
-              clearInterval(this.$interval)
-              this.songPlayed = false
-            }
-          })
-        }, 1000)
-      } else {
-        this.songPlayed = false
-      }
-    }, (response) => {
-    })
+    this.$interval = setInterval(() => {
+      this.$stateMPD = this.$resource('v1/stateMPD')
+      this.$stateMPD.get().then((response) => {
+        this.connected = true
+        this.player = response.data
+        if (this.player.state === 'play') {
+          this.songPlayed = true
+        } else {
+          this.songPlayed = false
+        }
+      }, (response) => {
+        this.connected = false
+      })
+    }, 1000)
+
+    // this.$stateMPD = this.$resource('v1/stateMPD')
+    // this.$stateMPD.get().then((response) => {
+    //   this.player = response.data
+    //   this.connected = true
+    //   if (this.player.state === 'play') {
+    //     this.songPlayed = true
+    //     this.$interval = setInterval(() => {
+    //       this.$stateMPD = this.$resource('v1/stateMPD')
+    //       this.$stateMPD.get().then((response) => {
+    //         this.player = response.data
+    //         if (this.player.state !== 'play') {
+    //           clearInterval(this.$interval)
+    //           this.songPlayed = false
+    //         }
+    //       })
+    //     }, 1000)
+    //   } else {
+    //     this.songPlayed = false
+    //   }
+    // }, (response) => {
+    // })
   },
   beforeUpdate () {
   },
   destroy () {
-    if (this.$interval) {
-      clearInterval(this.$interval)
-    }
+    clearInterval(this.$interval)
   }
 }
 </script>
