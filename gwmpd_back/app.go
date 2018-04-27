@@ -25,10 +25,10 @@ import (
 // Com ma chin chose à mettre correctement
 // Pour plus d'info, voir ici: https://github.com/gin-gonic/gin/issues/932
 type com struct {
-	sendCmdToMPDChan      chan []byte
-	mpdResponseChan       chan []byte
-	permissionToSendAtVue chan bool
-	info                  *mpdInfos
+	sendCmdToMPDChan              chan []byte
+	mpdResponseChan               chan []byte
+	waitPermissionToSendJSONAtVue chan bool
+	info                          *mpdInfos
 }
 
 type mpdInfos struct {
@@ -76,16 +76,13 @@ type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
 
-// func (e *com) changeMPD(c *gin.Context) {
-// }
-
 func (e *com) getStatMPD(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("currentsong")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	e.sendCmdToMPDChan <- []byte("status")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	e.sendCmdToMPDChan <- []byte("stats")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{
 		"album":          e.info.album,
 		"albums":         e.info.albums,
@@ -129,31 +126,31 @@ func (e *com) getStatMPD(c *gin.Context) {
 
 func (e *com) getPreviousSong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("previous")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{"previousSong": "ok"})
 }
 
 func (e *com) getNextSong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("next")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{"nextSong": "ok"})
 }
 
 func (e *com) getStopSong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("stop")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{"stopSong": "ok"})
 }
 
 func (e *com) getPlaySong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("play")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{"playSong": "ok"})
 }
 
 func (e *com) getPauseSong(c *gin.Context) {
 	e.sendCmdToMPDChan <- []byte("pause")
-	<-e.permissionToSendAtVue
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
@@ -164,8 +161,8 @@ func (e *com) setChangeVolume(c *gin.Context) {
 	if err := c.ShouldBind(&vol); err == nil {
 		e.info.volume = vol.Volume
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
-		<-e.permissionToSendAtVue
-		c.JSON(200, gin.H{"setVolume": "ok"})
+		<-e.waitPermissionToSendJSONAtVue
+		c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.volume})
 	} else {
 		log.Warningf("Unable to set volume to \"%v\": %s", vol.Volume, err)
 	}
@@ -180,8 +177,7 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		e.info.volume = 0
 	}
 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.volume))
-	<-e.permissionToSendAtVue
-	fmt.Println(e.info.volume)
+	<-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.volume})
 }
 
@@ -252,19 +248,19 @@ func startApp() {
 	// Commande à envoyer à mpd
 	sendCmdToMPDChan := make(chan []byte, 100)
 	// Autorisation pour envoyer les infos à la vue
-	permissionToSendAtVue := make(chan bool)
+	waitPermissionToSendJSONAtVue := make(chan bool)
 
 	info := &mpdInfos{}
 	com := &com{sendCmdToMPDChan: sendCmdToMPDChan,
-		mpdResponseChan:       mpdResponseChan,
-		permissionToSendAtVue: permissionToSendAtVue,
+		mpdResponseChan:               mpdResponseChan,
+		waitPermissionToSendJSONAtVue: waitPermissionToSendJSONAtVue,
 		info: info,
 	}
 
 	socket := initMPDSocket()
 	go readLineProcess(mpdResponseChan, socket)
 	go writeProcess(sendCmdToMPDChan, socket)
-	go eventManagement(com, permissionToSendAtVue)
+	go eventManagement(com, waitPermissionToSendJSONAtVue)
 
 	initGin(com)
 }
@@ -299,7 +295,7 @@ func writeProcess(sendCmdToMPDChan <-chan []byte, socket net.Conn) {
 	}
 }
 
-func eventManagement(com *com, permissionToSendAtVue chan<- bool) {
+func eventManagement(com *com, waitPermissionToSendJSONAtVue chan<- bool) {
 	ticker := time.NewTicker(55 * time.Second)
 	sendPing := false
 
@@ -310,12 +306,12 @@ func eventManagement(com *com, permissionToSendAtVue chan<- bool) {
 			com.sendCmdToMPDChan <- []byte("ping")
 			sendPing = true
 		case line := <-com.mpdResponseChan:
-			event(com, permissionToSendAtVue, &sendPing, &line)
+			event(com, waitPermissionToSendJSONAtVue, &sendPing, &line)
 		}
 	}
 }
 
-func event(com *com, permissionToSendAtVue chan<- bool, sendPing *bool, line *[]byte) {
+func event(com *com, waitPermissionToSendJSONAtVue chan<- bool, sendPing *bool, line *[]byte) {
 	log := logging.MustGetLogger("log")
 
 	if log.IsEnabledFor(5) {
@@ -328,11 +324,11 @@ func event(com *com, permissionToSendAtVue chan<- bool, sendPing *bool, line *[]
 		if *sendPing {
 			*sendPing = false
 		} else {
-			permissionToSendAtVue <- true
+			waitPermissionToSendJSONAtVue <- true
 		}
 		return
 	} else if bytes.Contains(*line, []byte("ACK")) {
-		permissionToSendAtVue <- true
+		waitPermissionToSendJSONAtVue <- true
 		return
 	}
 
