@@ -24,7 +24,8 @@
     <div class="">
       <!-- Volume du song -->
       <div class="">
-        Volume: {{ player.volume }}
+        Volume: {{ player.volume }} <br>
+        Volume via store: {{ getPlayerInfos.volume }}
       </div>
       <div class="">
         <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>
@@ -40,7 +41,9 @@
 </template>
 
 <script>
-// import store from './store'
+
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
   name: 'App',
   // store: store,
@@ -52,7 +55,14 @@ export default {
       player: {}
     }
   },
+  computed: {
+    ...mapGetters([
+      'getPlayerInfos'
+    ])
+  },
   methods: {
+    // les ... servent à fusionner les mapActions avec le reste des autres méthodes
+    ...mapActions([]),
     lessVolume () {
       this.$changeVolume = this.$resource('v1/changeVolume')
       this.$changeVolume.save({volume: this.player.volume - 5}).then((response) => {

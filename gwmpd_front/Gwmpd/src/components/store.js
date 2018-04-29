@@ -8,7 +8,7 @@ const state = {
 }
 
 const getters = {
-  player: state => state.dataPlayer
+  getPlayerInfos: state => state.dataPlayer
 }
 
 const mutations = {
