@@ -40,8 +40,10 @@
 </template>
 
 <script>
+// import store from './store'
 export default {
   name: 'App',
+  // store: store,
   data () {
     return {
       appName: 'Gwmpd',
@@ -110,6 +112,8 @@ export default {
     }
   },
   mounted () {
+    // console.log(this.$store)
+    // this.$store.commit('CHANGE_DATA', 'coin')
     this.$interval = setInterval(() => {
       this.$stateMPD = this.$resource('v1/stateMPD')
       this.$stateMPD.get().then((response) => {
@@ -124,28 +128,6 @@ export default {
         this.connected = false
       })
     }, 1000)
-
-    // this.$stateMPD = this.$resource('v1/stateMPD')
-    // this.$stateMPD.get().then((response) => {
-    //   this.player = response.data
-    //   this.connected = true
-    //   if (this.player.state === 'play') {
-    //     this.songPlayed = true
-    //     this.$interval = setInterval(() => {
-    //       this.$stateMPD = this.$resource('v1/stateMPD')
-    //       this.$stateMPD.get().then((response) => {
-    //         this.player = response.data
-    //         if (this.player.state !== 'play') {
-    //           clearInterval(this.$interval)
-    //           this.songPlayed = false
-    //         }
-    //       })
-    //     }, 1000)
-    //   } else {
-    //     this.songPlayed = false
-    //   }
-    // }, (response) => {
-    // })
   },
   beforeUpdate () {
   },

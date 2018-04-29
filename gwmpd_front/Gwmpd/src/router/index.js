@@ -1,10 +1,12 @@
 import Vue from 'vue'
+// import Vuex from 'vuex'
 import Router from 'vue-router'
 import AboutView from '@/components/AboutView'
 import PlaylistView from '@/components/PlaylistView'
 import QueueView from '@/components/QueueView'
 import SideBar from '@/components/SideBar'
 
+// Vue.use(Vuex)
 Vue.use(Router)
 
 export default new Router({
