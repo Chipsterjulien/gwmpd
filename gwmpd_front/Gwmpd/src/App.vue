@@ -62,7 +62,9 @@ export default {
   },
   methods: {
     // les ... servent à fusionner les mapActions avec le reste des autres méthodes
-    ...mapActions([]),
+    ...mapActions([
+      'change_all_data'
+    ]),
     lessVolume () {
       this.$changeVolume = this.$resource('v1/changeVolume')
       this.$changeVolume.save({volume: this.player.volume - 5}).then((response) => {
@@ -129,6 +131,7 @@ export default {
       this.$stateMPD.get().then((response) => {
         this.connected = true
         this.player = response.data
+        // change_all_data
         if (this.player.state === 'play') {
           this.songPlayed = true
         } else {

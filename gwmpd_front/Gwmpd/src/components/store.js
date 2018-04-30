@@ -21,6 +21,7 @@ const mutations = {
 // d'appeler plusieurs mutations à la fois et sourtout
 // surtout d'utiliser les promises ($resource)
 const actions = {
+  change_all_data: ({ commit }) => commit('CHANGE_ALL_DATA')
 }
 
 export default new Vuex.Store({
