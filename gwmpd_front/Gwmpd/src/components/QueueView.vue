@@ -32,9 +32,9 @@ export default {
     ])
   },
   mounted () {
-    this.$resource('v1/getPlaylist').get().then((response) => {
-      this.changePlaylist(response.data)
-    })
+    // this.$resource('v1/getPlaylist').get().then((response) => {
+    //   this.changePlaylist(response.data)
+    // })
   }
 }
 </script>

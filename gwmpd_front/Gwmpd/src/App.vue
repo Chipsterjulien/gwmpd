@@ -106,17 +106,20 @@ export default {
     }
   },
   mounted () {
-    this.$interval = setInterval(() => {
-      this.$resource('v1/stateMPD').get().then((response) => {
-        this.changeAllData(response.data)
-        this.connected = true
-        if (response.data.state === 'play') {
-          this.songPlayed = true
-        }
-      }, (response) => {
-        this.connected = false
-      })
-    }, 1000)
+    this.$resource('v1/statusMPD').get().then((response) => {
+      console.log(response.data)
+    })
+    // this.$interval = setInterval(() => {
+    //   this.$resource('v1/currentSong').get().then((response) => {
+    //     this.changeAllData(response.data)
+    //     this.connected = true
+    //     if (response.data.state === 'play') {
+    //       this.songPlayed = true
+    //     }
+    //   }, (response) => {
+    //     this.connected = false
+    //   })
+    // }, 1000)
   },
   beforeUpdate () {
   },
