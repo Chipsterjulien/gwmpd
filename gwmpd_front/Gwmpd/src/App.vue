@@ -22,7 +22,7 @@
       <button type="button" name="forwardSong" @click="forwardSong">Forward</button>
     </div>
     <div class="">
-      <!-- Volume du song -->
+      <!-- song's volume -->
       <div class="">
         Volume via store: {{ getPlayerInfos.volume }}
       </div>
