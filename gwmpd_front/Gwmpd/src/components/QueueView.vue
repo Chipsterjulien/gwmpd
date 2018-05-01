@@ -1,13 +1,42 @@
 <template>
   <div class="">
-    QueueView
-    <router-view name='SideBar'/>
+    <div class="">
+      Title song: {{ getPlayerInfos.title }} <br>
+      Album: {{ getPlayerInfos.album }} <br>
+      Groupe: {{ getPlayerInfos.artist }} <br>
+      Consommé: {{ getPlayerInfos.elapsed }}s <br>
+      Temps total: {{ getPlayerInfos.timesong }}s <br>
+    </div>
+    <div class="">
+      <router-view name='SideBar'/>
+    </div>
   </div>
 </template>
 
 <script>
+import { mapGetters, mapActions } from 'vuex'
+// import { mapGetters } from 'vuex'
 export default {
-  name: 'QueueView'
+  name: 'QueueView',
+  data () {
+    return {
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'getPlayerInfos'
+    ])
+  },
+  methods: {
+    ...mapActions([
+      'changePlaylist'
+    ])
+  },
+  mounted () {
+    this.$resource('v1/getPlaylist').get().then((response) => {
+      this.changePlaylist(response.data)
+    })
+  }
 }
 </script>
 

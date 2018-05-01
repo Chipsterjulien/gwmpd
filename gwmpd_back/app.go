@@ -156,6 +156,11 @@ func (e *com) getPauseSong(c *gin.Context) {
 	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
+func (e *com) getPlaylist(c *gin.Context) {
+	e.sendCmdToMPDChan <- []byte("playlistinfo")
+	<-e.waitPermissionToSendJSONAtVue
+}
+
 func (e *com) setChangeVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	var vol volumeForm
@@ -211,6 +216,7 @@ func initGin(com *com) {
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.POST("/changeVolume", com.setChangeVolume)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
+		v1.GET("/getPlaylist", com.getPlaylist)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))

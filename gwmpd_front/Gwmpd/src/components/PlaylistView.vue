@@ -6,7 +6,10 @@
 
 <script>
 export default {
-  name: 'PlaylistView'
+  name: 'PlaylistView',
+  mounted () {
+    console.log('Je passe dans mounted de playlist')
+  }
 }
 </script>
 

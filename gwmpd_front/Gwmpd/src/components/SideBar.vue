@@ -1,5 +1,10 @@
 <template lang="html">
   <div class="">
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
     SideBar
   </div>
 </template>

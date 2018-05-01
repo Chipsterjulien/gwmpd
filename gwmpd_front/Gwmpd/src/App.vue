@@ -24,7 +24,7 @@
     <div class="">
       <!-- song's volume -->
       <div class="">
-        Volume via store: {{ getPlayerInfos.volume }}
+        Volume: {{ getPlayerInfos.volume }}
       </div>
       <div class="">
         <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>

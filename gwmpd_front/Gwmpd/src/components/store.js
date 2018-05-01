@@ -1,14 +1,19 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
+// Si je veux plusieurs stores, il faut que je regarde du coté des modules:
+// https://vuex.vuejs.org/fr/modules.html
+
 Vue.use(Vuex)
 
 const state = {
-  dataPlayer: {}
+  dataPlayer: {},
+  playlist: {}
 }
 
 const getters = {
-  getPlayerInfos: state => state.dataPlayer
+  getPlayerInfos: state => state.dataPlayer,
+  getPlaylist: state => state.playlist
 }
 
 const mutations = {
@@ -17,6 +22,9 @@ const mutations = {
   },
   CHANGE_VOLUME: (state, volume) => {
     state.dataPlayer.volume = volume
+  },
+  CHANGE_PLAYLIST: (state, playlist) => {
+    state.playlist = playlist
   }
 }
 
@@ -26,6 +34,9 @@ const actions = {
   },
   changeVolume: (store, volume) => {
     store.commit('CHANGE_VOLUME', volume)
+  },
+  changePlaylist: (store, playlist) => {
+    store.commit('CHANGE_PLAYLIST', playlist)
   }
 }
 
