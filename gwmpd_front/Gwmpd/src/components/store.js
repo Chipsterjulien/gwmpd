@@ -14,6 +14,9 @@ const getters = {
 const mutations = {
   CHANGE_ALL_DATA: (state, data) => {
     state.dataPlayer = data
+  },
+  CHANGE_VOLUME: (state, volume) => {
+    state.dataPlayer.volume = volume
   }
 }
 
@@ -21,7 +24,12 @@ const mutations = {
 // d'appeler plusieurs mutations à la fois et sourtout
 // surtout d'utiliser les promises ($resource)
 const actions = {
-  change_all_data: ({ commit }) => commit('CHANGE_ALL_DATA')
+  changeAllData: (store, data) => {
+    store.commit('CHANGE_ALL_DATA', data)
+  },
+  changeVolume: (store, volume) => {
+    store.commit('CHANGE_VOLUME', volume)
+  }
 }
 
 export default new Vuex.Store({
