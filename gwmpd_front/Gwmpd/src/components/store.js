@@ -20,9 +20,6 @@ const mutations = {
   }
 }
 
-// Les actions sont comme les mutations mais elles permettent
-// d'appeler plusieurs mutations à la fois et sourtout
-// surtout d'utiliser les promises ($resource)
 const actions = {
   changeAllData: (store, data) => {
     store.commit('CHANGE_ALL_DATA', data)
