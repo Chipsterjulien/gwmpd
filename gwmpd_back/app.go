@@ -31,6 +31,46 @@ type com struct {
 	info                          *mpdInfos
 }
 
+type mpdCurrentSong struct {
+}
+
+// < currentsong
+// file: A Sky Full Of Stars - Coldplay.mp3
+// Last-Modified: 2014-08-13T19:13:13Z
+// Artist: Coldplay
+// Title: A Sky Full of Stars
+// Album: A Sky Full of Stars
+// Track: 1
+// Date: 2014
+// Genre: English Music
+// Time: 268
+// duration: 268.206
+// Pos: 5
+// Id: 6
+
+type mpdStatus struct {
+}
+
+// < status
+// volume: 40
+// repeat: 0
+// random: 0
+// single: 0
+// consume: 0
+// playlist: 2
+// playlistlength: 9
+// mixrampdb: 0.000000
+// state: pause
+// song: 5
+// songid: 6
+// time: 69:268
+// elapsed: 68.847
+// bitrate: 320
+// duration: 268.206
+// audio: 44100:24:2
+// nextsong: 6
+// nextsongid: 7
+
 type mpdInfos struct {
 	album          string
 	albums         int
@@ -72,6 +112,67 @@ type mpdInfos struct {
 	volumeSav      int
 }
 
+type mpdStat struct {
+}
+
+// ********
+// Stat mpd
+// ********
+
+// uptime: 19618
+// playtime: 2362
+// artists: 217
+// albums: 127
+// songs: 1144
+// db_playtime: 245409
+// db_update: 1524168977
+
+type mpdPlaylist struct {
+}
+
+//************************************
+// Exemple de playlist renvoyé par mpd
+//************************************
+
+// file: Mp3 varies/Dessins animés/Attaquantes_G�n�rique.mp3
+// Last-Modified: 2008-05-26T21:12:13Z
+// Artist: ?
+// Title: Les attaquantes
+// Album: Attaquantes
+// Date: 1988
+// Genre: Oldies
+// Time: 155
+// duration: 154.706
+// Pos: 0
+// Id: 1
+
+// file: Toy-Box_-_Eenie_Meenie_Miney_Mo_(1999).mp3
+// Last-Modified: 2015-11-26T13:17:22Z
+// Time: 198
+// duration: 198.217
+// Pos: 1
+// Id: 2
+
+// file: Skyfall - Adele.mp3
+// Last-Modified: 2014-09-03T13:04:02Z
+// Artist: Adele
+// Title: Skyfall - Adele
+// Track: 4294967295
+// Date: -1
+// Time: 289
+// duration: 289.336
+// Pos: 2
+// Id: 3
+
+// file: Krewella-Alive.mp3
+// Last-Modified: 2013-10-13T12:48:19Z
+// Title: Krewella - Alive
+// Track: 1
+// Time: 207
+// duration: 206.544
+// Pos: 3
+// Id: 4
+
 type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
@@ -83,29 +184,13 @@ func (e *com) getStatMPD(c *gin.Context) {
 	<-e.waitPermissionToSendJSONAtVue
 	// e.sendCmdToMPDChan <- []byte("stats")
 	// <-e.waitPermissionToSendJSONAtVue
-	// e.sendCmdToMPDChan <- []byte("playlistinfo")
-	// <-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{
 		"album":          e.info.album,
-		"albums":         e.info.albums,
 		"artist":         e.info.artist,
-		"artists":        e.info.artists,
-		"audio":          e.info.audio,
-		"bitrate":        e.info.bitrate,
 		"consume":        e.info.consume,
-		"date":           e.info.date,
-		"dbPlaytime":     e.info.dbPlaytime,
-		"dbUpdate":       e.info.dbUpdate,
 		"duration":       e.info.duration,
 		"elapsed":        e.info.elapsed,
-		"file":           e.info.file,
 		"genre":          e.info.genre,
-		"id":             e.info.id,
-		"Last-Modified":  e.info.lastModified,
-		"mixrampdb":      e.info.mixrampDB,
-		"name":           e.info.name,
-		"nextsong":       e.info.nextSong,
-		"nextsongid":     e.info.nextSongID,
 		"playlist":       e.info.playlist,
 		"playlistLength": e.info.playlistLength,
 		"playtime":       e.info.playtime,
@@ -115,14 +200,28 @@ func (e *com) getStatMPD(c *gin.Context) {
 		"single":         e.info.single,
 		"state":          e.info.state,
 		"song":           e.info.song,
-		"songs":          e.info.songs,
-		"songid":         e.info.songID,
-		"timesong":       e.info.timeSong,
+		"timeSong":       e.info.timeSong,
 		"timeElapsed":    e.info.timeElapsed,
 		"title":          e.info.title,
-		"track":          e.info.track,
-		"uptime":         e.info.uptime,
 		"volume":         e.info.volume,
+		// "audio":          e.info.audio,
+		// "albums":         e.info.albums,
+		// "artists":        e.info.artists,
+		// "bitrate":        e.info.bitrate,
+		// "date":           e.info.date,
+		// "dbPlaytime":     e.info.dbPlaytime,
+		// "dbUpdate":       e.info.dbUpdate,
+		// "file":           e.info.file,
+		// "id":             e.info.id,
+		// "Last-Modified":  e.info.lastModified,
+		// "mixrampdb":      e.info.mixrampDB,
+		// "name":           e.info.name,
+		// "nextsong":       e.info.nextSong,
+		// "nextsongid":     e.info.nextSongID,
+		// "songs":          e.info.songs,
+		// "songid":         e.info.songID,
+		// "track":          e.info.track,
+		// "uptime":         e.info.uptime,
 	})
 }
 
@@ -157,8 +256,8 @@ func (e *com) getPauseSong(c *gin.Context) {
 }
 
 func (e *com) getPlaylist(c *gin.Context) {
-	e.sendCmdToMPDChan <- []byte("playlistinfo")
-	<-e.waitPermissionToSendJSONAtVue
+	// e.sendCmdToMPDChan <- []byte("playlistinfo")
+	// <-e.waitPermissionToSendJSONAtVue
 }
 
 func (e *com) setChangeVolume(c *gin.Context) {
@@ -214,8 +313,8 @@ func initGin(com *com) {
 		v1.GET("/stopSong", com.getStopSong)
 		v1.GET("/playSong", com.getPlaySong)
 		v1.GET("/pauseSong", com.getPauseSong)
-		v1.POST("/changeVolume", com.setChangeVolume)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
+		v1.POST("/changeVolume", com.setChangeVolume)
 		v1.GET("/getPlaylist", com.getPlaylist)
 	}
 
