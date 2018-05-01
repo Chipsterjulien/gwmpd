@@ -5,7 +5,7 @@
       Album: {{ getPlayerInfos.album }} <br>
       Groupe: {{ getPlayerInfos.artist }} <br>
       Consommé: {{ getPlayerInfos.elapsed }}s <br>
-      Temps total: {{ getPlayerInfos.timesong }}s <br>
+      Temps total: {{ getPlayerInfos.timeSong }}s <br>
     </div>
     <div class="">
       <router-view name='SideBar'/>
@@ -15,7 +15,6 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-// import { mapGetters } from 'vuex'
 export default {
   name: 'QueueView',
   data () {
