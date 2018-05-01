@@ -81,8 +81,10 @@ func (e *com) getStatMPD(c *gin.Context) {
 	<-e.waitPermissionToSendJSONAtVue
 	e.sendCmdToMPDChan <- []byte("status")
 	<-e.waitPermissionToSendJSONAtVue
-	e.sendCmdToMPDChan <- []byte("stats")
-	<-e.waitPermissionToSendJSONAtVue
+	// e.sendCmdToMPDChan <- []byte("stats")
+	// <-e.waitPermissionToSendJSONAtVue
+	// e.sendCmdToMPDChan <- []byte("playlistinfo")
+	// <-e.waitPermissionToSendJSONAtVue
 	c.JSON(200, gin.H{
 		"album":          e.info.album,
 		"albums":         e.info.albums,
@@ -92,8 +94,8 @@ func (e *com) getStatMPD(c *gin.Context) {
 		"bitrate":        e.info.bitrate,
 		"consume":        e.info.consume,
 		"date":           e.info.date,
-		"dbplaytime":     e.info.dbPlaytime,
-		"dbupdate":       e.info.dbUpdate,
+		"dbPlaytime":     e.info.dbPlaytime,
+		"dbUpdate":       e.info.dbUpdate,
 		"duration":       e.info.duration,
 		"elapsed":        e.info.elapsed,
 		"file":           e.info.file,
@@ -101,11 +103,11 @@ func (e *com) getStatMPD(c *gin.Context) {
 		"id":             e.info.id,
 		"Last-Modified":  e.info.lastModified,
 		"mixrampdb":      e.info.mixrampDB,
-		"Name":           e.info.name,
+		"name":           e.info.name,
 		"nextsong":       e.info.nextSong,
 		"nextsongid":     e.info.nextSongID,
 		"playlist":       e.info.playlist,
-		"playlistlength": e.info.playlistLength,
+		"playlistLength": e.info.playlistLength,
 		"playtime":       e.info.playtime,
 		"pos":            e.info.pos,
 		"random":         e.info.random,
@@ -115,7 +117,7 @@ func (e *com) getStatMPD(c *gin.Context) {
 		"song":           e.info.song,
 		"songs":          e.info.songs,
 		"songid":         e.info.songID,
-		"TimeSong":       e.info.timeSong,
+		"timesong":       e.info.timeSong,
 		"timeElapsed":    e.info.timeElapsed,
 		"title":          e.info.title,
 		"track":          e.info.track,
@@ -296,22 +298,13 @@ func writeProcess(sendCmdToMPDChan <-chan []byte, socket net.Conn) {
 }
 
 func eventManagement(com *com, waitPermissionToSendJSONAtVue chan<- bool) {
-	ticker := time.NewTicker(55 * time.Second)
-	sendPing := false
-
 	for {
-		select {
-		case <-ticker.C:
-			// Send ping to socket every 55s
-			com.sendCmdToMPDChan <- []byte("ping")
-			sendPing = true
-		case line := <-com.mpdResponseChan:
-			event(com, waitPermissionToSendJSONAtVue, &sendPing, &line)
-		}
+		line := <-com.mpdResponseChan
+		event(com, waitPermissionToSendJSONAtVue, &line)
 	}
 }
 
-func event(com *com, waitPermissionToSendJSONAtVue chan<- bool, sendPing *bool, line *[]byte) {
+func event(com *com, waitPermissionToSendJSONAtVue chan<- bool, line *[]byte) {
 	log := logging.MustGetLogger("log")
 
 	if log.IsEnabledFor(5) {
@@ -321,11 +314,7 @@ func event(com *com, waitPermissionToSendJSONAtVue chan<- bool, sendPing *bool, 
 	if bytes.Contains(*line, []byte("OK MPD")) {
 		return
 	} else if bytes.Equal(*line, []byte("OK")) {
-		if *sendPing {
-			*sendPing = false
-		} else {
-			waitPermissionToSendJSONAtVue <- true
-		}
+		waitPermissionToSendJSONAtVue <- true
 		return
 	} else if bytes.Contains(*line, []byte("ACK")) {
 		waitPermissionToSendJSONAtVue <- true
