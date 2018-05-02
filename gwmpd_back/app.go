@@ -133,81 +133,162 @@ type volumeForm struct {
 }
 
 func (e *com) getCurrentSong(c *gin.Context) {
-	// e.sendCmdToMPDChan <- []byte("currentsong")
-	// <-e.waitPermissionToSendJSONAtVue
-	// e.sendCmdToMPDChan <- []byte("status")
-	// <-e.waitPermissionToSendJSONAtVue
-	// e.sendCmdToMPDChan <- []byte("stats")
-	// <-e.waitPermissionToSendJSONAtVue
-	// c.JSON(200, gin.H{
-	// 	"album":          e.info.album,
-	// 	"artist":         e.info.artist,
-	// 	"consume":        e.info.consume,
-	// 	"duration":       e.info.duration,
-	// 	"elapsed":        e.info.elapsed,
-	// 	"genre":          e.info.genre,
-	// 	"playlist":       e.info.playlist,
-	// 	"playlistLength": e.info.playlistLength,
-	// 	"playtime":       e.info.playtime,
-	// 	"pos":            e.info.pos,
-	// 	"random":         e.info.random,
-	// 	"repeat":         e.info.repeat,
-	// 	"single":         e.info.single,
-	// 	"state":          e.info.state,
-	// 	"song":           e.info.song,
-	// 	"timeSong":       e.info.timeSong,
-	// 	"timeElapsed":    e.info.timeElapsed,
-	// 	"title":          e.info.title,
-	// 	"volume":         e.info.volume,
-	// 	// "audio":          e.info.audio,
-	// 	// "albums":         e.info.albums,
-	// 	// "artists":        e.info.artists,
-	// 	// "bitrate":        e.info.bitrate,
-	// 	// "date":           e.info.date,
-	// 	// "dbPlaytime":     e.info.dbPlaytime,
-	// 	// "dbUpdate":       e.info.dbUpdate,
-	// 	// "file":           e.info.file,
-	// 	// "id":             e.info.id,
-	// 	// "Last-Modified":  e.info.lastModified,
-	// 	// "mixrampdb":      e.info.mixrampDB,
-	// 	// "name":           e.info.name,
-	// 	// "nextsong":       e.info.nextSong,
-	// 	// "nextsongid":     e.info.nextSongID,
-	// 	// "songs":          e.info.songs,
-	// 	// "songid":         e.info.songID,
-	// 	// "track":          e.info.track,
-	// 	// "uptime":         e.info.uptime,
-	// })
+	log := logging.MustGetLogger("log")
+	e.sendCmdToMPDChan <- []byte("currentsong")
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, end := splitLine(&line)
+		switch first {
+		case "file":
+			e.info.currentSong.file = end
+		case "Last-Modified":
+			e.info.currentSong.lastModified = end
+		case "Time":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"volume\" %s", end)
+				continue
+			}
+			e.info.currentSong.time = i
+		case "duration":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"duration\" %s", end)
+				continue
+			}
+			e.info.currentSong.duration = f
+		case "Pos":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Pos\" %s", end)
+				continue
+			}
+			e.info.currentSong.pos = i
+		case "Id":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Id\" %s", end)
+				continue
+			}
+			e.info.currentSong.id = i
+		default:
+			log.Errorf("In getCurrentSong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"file":          e.info.currentSong.file,
+		"Last-Modified": e.info.currentSong.lastModified,
+		"Time":          e.info.currentSong.time,
+		"duration":      e.info.currentSong.duration,
+		"Pos":           e.info.currentSong.pos,
+		"Id":            e.info.currentSong.id,
+	})
 }
 
 func (e *com) getPreviousSong(c *gin.Context) {
-	// 	e.sendCmdToMPDChan <- []byte("previous")
-	// 	<-e.waitPermissionToSendJSONAtVue
-	// 	c.JSON(200, gin.H{"previousSong": "ok"})
+	log := logging.MustGetLogger("log")
+	e.sendCmdToMPDChan <- []byte("previous")
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Errorf("In getPreviousSong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"previousSong": "ok"})
 }
 
 func (e *com) getNextSong(c *gin.Context) {
-	// e.sendCmdToMPDChan <- []byte("next")
-	// <-e.waitPermissionToSendJSONAtVue
-	// c.JSON(200, gin.H{"nextSong": "ok"})
+	log := logging.MustGetLogger("log")
+	e.sendCmdToMPDChan <- []byte("next")
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Errorf("In getNextSong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"nextSong": "ok"})
 }
 
 func (e *com) getStopSong(c *gin.Context) {
-	// e.sendCmdToMPDChan <- []byte("stop")
-	// <-e.waitPermissionToSendJSONAtVue
-	// c.JSON(200, gin.H{"stopSong": "ok"})
+	log := logging.MustGetLogger("log")
+	e.sendCmdToMPDChan <- []byte("stop")
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Errorf("In getStopSong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"stopSong": "ok"})
 }
 
 func (e *com) getPlaySong(c *gin.Context) {
-	// e.sendCmdToMPDChan <- []byte("play")
-	// <-e.waitPermissionToSendJSONAtVue
-	// c.JSON(200, gin.H{"playSong": "ok"})
+	log := logging.MustGetLogger("log")
+	e.sendCmdToMPDChan <- []byte("play")
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Errorf("In getPlaySong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"playSong": "ok"})
 }
 
 func (e *com) getPauseSong(c *gin.Context) {
-	// e.sendCmdToMPDChan <- []byte("pause")
-	// <-e.waitPermissionToSendJSONAtVue
-	// c.JSON(200, gin.H{"pauseSong": "ok"})
+	log := logging.MustGetLogger("log")
+	e.sendCmdToMPDChan <- []byte("pause")
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Errorf("In getPauseSong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
@@ -217,63 +298,171 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsume
 		if bytes.Equal(line, []byte("OK")) {
-			break
+			return
 		}
 
-		lineSplitted := strings.Split(string(line), ":")
-		end := strings.TrimLeft(strings.Join(lineSplitted[1:], ":"), " ")
-		_ = end
-
-		switch lineSplitted[0] {
+		first, end := splitLine(&line)
+		switch first {
+		case "consume":
+			if end == "1" {
+				e.info.status.consume = true
+			} else {
+				e.info.status.consume = false
+			}
+		case "mixrampdb":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"mixrampdb\" %s", end)
+				continue
+			}
+			e.info.status.mixrampDB = f
+		case "playlist":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"playlist\" %s", end)
+				continue
+			}
+			e.info.status.playlist = i
+		case "playlistlength":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"playlistlength\" %s", end)
+				continue
+			}
+			e.info.status.playlistLength = i
+		case "random":
+			if end == "1" {
+				e.info.status.random = true
+			} else {
+				e.info.status.random = false
+			}
 		case "repeat":
 			if end == "1" {
 				e.info.status.repeat = true
 			} else {
 				e.info.status.repeat = false
 			}
+		case "single":
+			if end == "1" {
+				e.info.status.single = true
+			} else {
+				e.info.status.single = false
+			}
+		case "song":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"song\" %s", end)
+				continue
+			}
+			e.info.status.song = i
+		case "songid":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Debug("coin")
+				log.Warningf("Unable to convert \"songid\" %s", end)
+				continue
+			}
+			e.info.status.songID = i
+		case "nextsong":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"nextsong\" %s", end)
+				continue
+			}
+			e.info.status.nextSong = i
+		case "nextsongid":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"nextsongid\" %s", end)
+				continue
+			}
+			e.info.status.nextSongID = i
+		case "state":
+			e.info.status.state = end
 		case "volume":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"volume\" %s", end)
-				return
+				continue
 			}
 			e.info.status.volume = i
 		default:
-			log.Errorf("Unknown: \"%s\"\n", lineSplitted[0])
+			log.Errorf("Unknown: \"%s\"\n", first)
 		}
+	}
+	c.JSON(200, gin.H{
+		"consume":        e.info.status.consume,
+		"mixrampdb":      e.info.status.mixrampDB,
+		"playlist":       e.info.status.playlist,
+		"playlistlength": e.info.status.playlistLength,
+		"random":         e.info.status.random,
+		"repeat":         e.info.status.repeat,
+		"single":         e.info.status.single,
+		"song":           e.info.status.song,
+		"songid":         e.info.status.songID,
+		"nextsong":       e.info.status.nextSong,
+		"nextsongid":     e.info.status.nextSongID,
+		"state":          e.info.status.state,
+		"volume":         e.info.status.volume,
+	})
+}
+
+func (e *com) getPlaylist(c *gin.Context) {
+	// e.sendCmdToMPDChan <- []byte("playlistinfo")
+	// <-e.waitPermissionToSendJSONAtVue
+}
+
+func (e *com) setChangeVolume(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var vol volumeForm
+
+	if err := c.ShouldBind(&vol); err == nil {
+		e.info.status.volume = vol.Volume
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
+		for {
+			line := <-e.cmdToConsume
+			if bytes.Equal(line, []byte("OK")) {
+				return
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Errorf("In setChangeVolume, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.status.volume})
+	} else {
+		log.Warningf("Unable to set volume to \"%v\": %s\n", vol.Volume, err)
 	}
 }
 
-// func (e *com) getPlaylist(c *gin.Context) {
-// 	// e.sendCmdToMPDChan <- []byte("playlistinfo")
-// 	// <-e.waitPermissionToSendJSONAtVue
-// }
-
-func (e *com) setChangeVolume(c *gin.Context) {
-	// log := logging.MustGetLogger("log")
-	// var vol volumeForm
-	//
-	// if err := c.ShouldBind(&vol); err == nil {
-	// 	e.info.volume = vol.Volume
-	// 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
-	// 	<-e.waitPermissionToSendJSONAtVue
-	// 	c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.volume})
-	// } else {
-	// 	log.Warningf("Unable to set volume to \"%v\": %s", vol.Volume, err)
-	// }
-}
-
 func (e *com) toggleMuteVolume(c *gin.Context) {
-	// if e.info.volume == 0 {
-	// 	e.info.volume = e.info.volumeSav
-	// 	e.info.volumeSav = 0
-	// } else {
-	// 	e.info.volumeSav = e.info.volume
-	// 	e.info.volume = 0
-	// }
-	// e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.volume))
-	// <-e.waitPermissionToSendJSONAtVue
-	// c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.volume})
+	log := logging.MustGetLogger("log")
+	if e.info.status.volume == 0 {
+		e.info.status.volume = e.info.status.volumeSav
+		e.info.status.volumeSav = 0
+	} else {
+		e.info.status.volumeSav = e.info.status.volume
+		e.info.status.volume = 0
+	}
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.status.volume))
+
+	for {
+		line := <-e.cmdToConsume
+		if bytes.Equal(line, []byte("OK")) {
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Errorf("In toggleMuteVolume, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.volume})
 }
 
 func initGin(com *com) {
@@ -297,12 +486,12 @@ func initGin(com *com) {
 	v1 := g.Group("/v1")
 	{
 		v1.POST("/changeVolume", com.setChangeVolume)
-		v1.GET("/currentSong", com.getCurrentSong) // *
+		v1.GET("/currentSong", com.getCurrentSong)
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.GET("/playSong", com.getPlaySong)
 		v1.GET("/previousSong", com.getPreviousSong)
 		v1.GET("/nextSong", com.getNextSong)
-		v1.GET("/statusMPD", com.getStatusMPD) // *****
+		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
 		// v1.GET("/getPlaylist", com.getPlaylist)
@@ -339,6 +528,13 @@ func main() {
 	startApp()
 }
 
+func splitLine(line *[]byte) (string, string) {
+	lineSplitted := strings.Split(string(*line), ":")
+	end := strings.TrimLeft(strings.Join(lineSplitted[1:], ":"), " ")
+
+	return lineSplitted[0], end
+}
+
 func startApp() {
 	// Réponse venant de mpd
 	mpdResponseChan := make(chan []byte, 100)
@@ -349,21 +545,26 @@ func startApp() {
 	// Autorisation pour envoyer les infos à la vue
 	// waitPermissionToSendJSONAtVue := make(chan bool)
 
-	currentSong := &mpdCurrentSong{}
-	status := &mpdStatus{}
-	stat := &mpdStat{}
+	// currentSong := &mpdCurrentSong{}
+	// status := &mpdStatus{}
+	// stat := &mpdStat{}
 
-	info := &mpdInfos{
-		currentSong: currentSong,
-		status:      status,
-		stat:        stat,
-	}
+	// info := &mpdInfos{
+	// 	currentSong: &mpdCurrentSong{},
+	// 	status:      &mpdStatus{},
+	// 	stat:        &mpdStat{},
+	// }
 
 	com := &com{
 		sendCmdToMPDChan: sendCmdToMPDChan,
 		mpdResponseChan:  mpdResponseChan,
 		cmdToConsume:     cmdToConsume,
-		info:             info,
+
+		info: &mpdInfos{
+			currentSong: &mpdCurrentSong{},
+			status:      &mpdStatus{},
+			stat:        &mpdStat{},
+		},
 		// waitPermissionToSendJSONAtVue: waitPermissionToSendJSONAtVue,
 	}
 
