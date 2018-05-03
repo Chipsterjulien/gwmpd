@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -28,8 +29,9 @@ type com struct {
 	cmdToConsumeChan chan []byte
 	mpdResponseChan  chan []byte
 	sendCmdToMPDChan chan []byte
-	orderCmdChan     chan bool
+	mutex            *sync.Mutex
 	info             *mpdInfos
+	// orderCmdChan     chan bool
 }
 
 type mpdInfos struct {
@@ -92,13 +94,11 @@ type volumeForm struct {
 
 func (e *com) getCurrentSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("currentsong")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
 			break
 		}
 
@@ -163,13 +163,13 @@ func (e *com) getCurrentSong(c *gin.Context) {
 
 func (e *com) getPreviousSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("previous")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -185,13 +185,13 @@ func (e *com) getPreviousSong(c *gin.Context) {
 
 func (e *com) getNextSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("next")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -207,13 +207,13 @@ func (e *com) getNextSong(c *gin.Context) {
 
 func (e *com) getStopSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("stop")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -229,13 +229,13 @@ func (e *com) getStopSong(c *gin.Context) {
 
 func (e *com) getPlaySong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("play")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -251,13 +251,13 @@ func (e *com) getPlaySong(c *gin.Context) {
 
 func (e *com) getPauseSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("pause")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -273,14 +273,14 @@ func (e *com) getPauseSong(c *gin.Context) {
 
 func (e *com) getCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("playlistinfo")
 	mySong := mpdCurrentSong{}
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -340,13 +340,13 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 
 func (e *com) getStatusMPD(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("status")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -482,13 +482,13 @@ func (e *com) setChangeVolume(c *gin.Context) {
 	var vol volumeForm
 
 	if err := c.ShouldBind(&vol); err == nil {
-		<-e.orderCmdChan
+		e.mutex.Lock()
 		e.info.status.volume = vol.Volume
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.orderCmdChan <- true
+				e.mutex.Unlock()
 				break
 			}
 
@@ -515,13 +515,13 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		e.info.status.volumeSav = e.info.status.volume
 		e.info.status.volume = 0
 	}
-	<-e.orderCmdChan
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.status.volume))
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.orderCmdChan <- true
+			e.mutex.Unlock()
 			break
 		}
 
@@ -609,15 +609,13 @@ func startApp() {
 	mpdResponseChan := make(chan []byte, 100)
 	sendCmdToMPDChan := make(chan []byte, 100)
 	cmdToConsumeChan := make(chan []byte, 100)
-	orderCmdChan := make(chan bool, 1)
-
-	orderCmdChan <- true
+	mutex := &sync.Mutex{}
 
 	com := &com{
 		cmdToConsumeChan: cmdToConsumeChan,
 		mpdResponseChan:  mpdResponseChan,
-		orderCmdChan:     orderCmdChan,
 		sendCmdToMPDChan: sendCmdToMPDChan,
+		mutex:            mutex,
 
 		info: &mpdInfos{
 			currentPlaylist: []mpdCurrentSong{},
@@ -699,7 +697,7 @@ func eventManagement(com *com) {
 
 			past = time.Now()
 			if bytes.Contains(line, []byte("ACK")) {
-				return
+				line = []byte("OK")
 			}
 			com.cmdToConsumeChan <- line
 		}
