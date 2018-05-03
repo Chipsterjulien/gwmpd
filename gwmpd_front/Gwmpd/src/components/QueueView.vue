@@ -33,6 +33,7 @@ export default {
   },
   mounted () {
     this.$resource('v1/currentPlaylist').get().then((response) => {
+      console.log(response.data)
       this.setPlaylist(response.data)
     })
   }

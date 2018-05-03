@@ -338,7 +338,26 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, gin.H{})
+	// ************************************************************************************
+	// Un début de solution pour imbriquer les infos facilement et ensuite obtenir un JSON:
+	// https://github.com/gin-gonic/gin/issues/87
+	// ************************************************************************************
+
+	// file: Mp3 varies/Dessins animés/Attaquantes_G�n�rique.mp3
+	// Last-Modified: 2008-05-26T21:12:13Z
+	// Artist: ?
+	// Title: Les attaquantes
+	// Album: Attaquantes
+	// Date: 1988
+	// Genre: Oldies
+	// Time: 155
+	// duration: 154.706
+	// Pos: 0
+	// Id: 1
+
+	// res := []string{"foo", "bar"}
+	res := map[string]int{"foo": 1, "bar": 2}
+	c.JSON(200, res)
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
