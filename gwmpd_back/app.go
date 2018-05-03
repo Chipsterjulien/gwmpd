@@ -108,6 +108,7 @@ func (e *com) getCurrentSong(c *gin.Context) {
 			e.info.currentSong.album = end
 		case "Artist":
 			e.info.currentSong.artist = end
+		case "Composer":
 		case "Date":
 			e.info.currentSong.date = end
 		case "duration":
