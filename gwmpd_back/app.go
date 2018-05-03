@@ -352,12 +352,30 @@ func (e *com) getStatusMPD(c *gin.Context) {
 
 		first, end := splitLine(&line)
 		switch first {
+		case "audio":
+			e.info.status.audio = end
+		case "bitrate":
+			e.info.status.bitrate = end
 		case "consume":
 			if end == "1" {
 				e.info.status.consume = true
 			} else {
 				e.info.status.consume = false
 			}
+		case "duration":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"duration\" %s", end)
+				continue
+			}
+			e.info.status.duration = f
+		case "elapsed":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"elapsed\" %s", end)
+				continue
+			}
+			e.info.status.elapsed = f
 		case "mixrampdb":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
@@ -428,6 +446,8 @@ func (e *com) getStatusMPD(c *gin.Context) {
 			e.info.status.nextSongID = i
 		case "state":
 			e.info.status.state = end
+		case "time":
+			e.info.status.time = end
 		case "volume":
 			i, err := strconv.Atoi(end)
 			if err != nil {
