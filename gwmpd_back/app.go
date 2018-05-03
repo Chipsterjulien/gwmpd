@@ -337,6 +337,8 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 			log.Errorf("In getPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
+
+	c.JSON(200, gin.H{})
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
@@ -478,7 +480,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	})
 }
 
-func (e *com) setChangeVolume(c *gin.Context) {
+func (e *com) setVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	var vol volumeForm
 
@@ -496,7 +498,7 @@ func (e *com) setChangeVolume(c *gin.Context) {
 			first, _ := splitLine(&line)
 			switch first {
 			default:
-				log.Errorf("In setChangeVolume, unknown: \"%s\"\n", first)
+				log.Errorf("In setVolume, unknown: \"%s\"\n", first)
 			}
 		}
 
@@ -556,7 +558,7 @@ func initGin(com *com) {
 
 	v1 := g.Group("/v1")
 	{
-		v1.POST("/changeVolume", com.setChangeVolume)
+		v1.POST("/setVolume", com.setVolume)
 		v1.GET("/currentSong", com.getCurrentSong)
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.GET("/playSong", com.getPlaySong)
