@@ -25,9 +25,10 @@ import (
 // Com ma chin chose à mettre correctement
 // Pour plus d'info, voir ici: https://github.com/gin-gonic/gin/issues/932
 type com struct {
-	sendCmdToMPDChan chan []byte
+	cmdToConsumeChan chan []byte
 	mpdResponseChan  chan []byte
-	cmdToConsume     chan []byte
+	sendCmdToMPDChan chan []byte
+	orderCmdChan     chan bool
 	info             *mpdInfos
 }
 
@@ -91,27 +92,24 @@ type volumeForm struct {
 
 func (e *com) getCurrentSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("currentsong")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
 		first, end := splitLine(&line)
 		switch first {
-		case "file":
-			e.info.currentSong.file = end
-		case "Last-Modified":
-			e.info.currentSong.lastModified = end
-		case "Time":
-			i, err := strconv.Atoi(end)
-			if err != nil {
-				log.Warningf("Unable to convert \"volume\" %s", end)
-				continue
-			}
-			e.info.currentSong.time = i
+		case "Album":
+			e.info.currentSong.album = end
+		case "Artist":
+			e.info.currentSong.artist = end
+		case "Date":
+			e.info.currentSong.date = end
 		case "duration":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
@@ -119,13 +117,9 @@ func (e *com) getCurrentSong(c *gin.Context) {
 				continue
 			}
 			e.info.currentSong.duration = f
-		case "Pos":
-			i, err := strconv.Atoi(end)
-			if err != nil {
-				log.Warningf("Unable to convert \"Pos\" %s", end)
-				continue
-			}
-			e.info.currentSong.pos = i
+		case "file":
+			e.info.currentSong.file = end
+		case "Genre":
 		case "Id":
 			i, err := strconv.Atoi(end)
 			if err != nil {
@@ -133,6 +127,25 @@ func (e *com) getCurrentSong(c *gin.Context) {
 				continue
 			}
 			e.info.currentSong.id = i
+		case "Last-Modified":
+			e.info.currentSong.lastModified = end
+		case "Pos":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Pos\" %s", end)
+				continue
+			}
+			e.info.currentSong.pos = i
+		case "Title":
+			e.info.currentSong.title = end
+		case "Time":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"volume\" %s", end)
+				continue
+			}
+			e.info.currentSong.time = i
+		case "Track":
 		default:
 			log.Errorf("In getCurrentSong, unknown: \"%s\"\n", first)
 		}
@@ -150,11 +163,13 @@ func (e *com) getCurrentSong(c *gin.Context) {
 
 func (e *com) getPreviousSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("previous")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -170,11 +185,13 @@ func (e *com) getPreviousSong(c *gin.Context) {
 
 func (e *com) getNextSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("next")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -190,11 +207,13 @@ func (e *com) getNextSong(c *gin.Context) {
 
 func (e *com) getStopSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("stop")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -210,11 +229,13 @@ func (e *com) getStopSong(c *gin.Context) {
 
 func (e *com) getPlaySong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("play")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -230,11 +251,13 @@ func (e *com) getPlaySong(c *gin.Context) {
 
 func (e *com) getPauseSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("pause")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -250,12 +273,14 @@ func (e *com) getPauseSong(c *gin.Context) {
 
 func (e *com) getCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("playlistinfo")
 	mySong := mpdCurrentSong{}
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -315,11 +340,13 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 
 func (e *com) getStatusMPD(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte("status")
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -409,7 +436,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 			}
 			e.info.status.volume = i
 		default:
-			log.Errorf("Unknown: \"%s\"\n", first)
+			log.Errorf("In getStatusMPD, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -435,11 +462,13 @@ func (e *com) setChangeVolume(c *gin.Context) {
 	var vol volumeForm
 
 	if err := c.ShouldBind(&vol); err == nil {
+		<-e.orderCmdChan
 		e.info.status.volume = vol.Volume
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
 		for {
-			line := <-e.cmdToConsume
+			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				e.orderCmdChan <- true
 				break
 			}
 
@@ -458,6 +487,7 @@ func (e *com) setChangeVolume(c *gin.Context) {
 
 func (e *com) toggleMuteVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	if e.info.status.volume == 0 {
 		e.info.status.volume = e.info.status.volumeSav
 		e.info.status.volumeSav = 0
@@ -465,11 +495,13 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		e.info.status.volumeSav = e.info.status.volume
 		e.info.status.volume = 0
 	}
+	<-e.orderCmdChan
 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.status.volume))
 
 	for {
-		line := <-e.cmdToConsume
+		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			e.orderCmdChan <- true
 			break
 		}
 
@@ -554,16 +586,17 @@ func splitLine(line *[]byte) (string, string) {
 }
 
 func startApp() {
-	// Réponse venant de mpd
 	mpdResponseChan := make(chan []byte, 100)
-	// Commande à envoyer à mpd
 	sendCmdToMPDChan := make(chan []byte, 100)
-	// Commande à traiter en interne
-	cmdToConsume := make(chan []byte, 100)
+	cmdToConsumeChan := make(chan []byte, 100)
+	orderCmdChan := make(chan bool, 1)
+
+	orderCmdChan <- true
 
 	com := &com{
-		cmdToConsume:     cmdToConsume,
+		cmdToConsumeChan: cmdToConsumeChan,
 		mpdResponseChan:  mpdResponseChan,
+		orderCmdChan:     orderCmdChan,
 		sendCmdToMPDChan: sendCmdToMPDChan,
 
 		info: &mpdInfos{
@@ -648,7 +681,7 @@ func eventManagement(com *com) {
 			if bytes.Contains(line, []byte("ACK")) {
 				return
 			}
-			com.cmdToConsume <- line
+			com.cmdToConsumeChan <- line
 		}
 	}
 }
