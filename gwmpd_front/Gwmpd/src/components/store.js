@@ -1,49 +1,90 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-// Si je veux plusieurs stores, il faut que je regarde du coté des modules:
-// https://vuex.vuejs.org/fr/modules.html
-
 Vue.use(Vuex)
 
-const state = {
-  dataPlayer: {},
-  playlist: {}
-}
-
-const getters = {
-  getPlayerInfos: state => state.dataPlayer,
-  getPlaylist: state => state.playlist
-}
-
-const mutations = {
-  CHANGE_ALL_DATA: (state, data) => {
-    state.dataPlayer = data
+const currentPlaylist = {
+  state: {
+    playlist: {}
   },
-  CHANGE_VOLUME: (state, volume) => {
-    state.dataPlayer.volume = volume
+  getters: {
+    getCurrentPlaylist: state => state.playlist
   },
-  CHANGE_PLAYLIST: (state, playlist) => {
-    state.playlist = playlist
+  mutations: {
+    SET_PLAYLIST: (state, newPlaylist) => {
+      state.playlist = newPlaylist
+    }
+  },
+  actions: {
+    setPlaylist: ({state, commit}, newPlaylist) => {
+      commit('SET_PLAYLIST', newPlaylist)
+    }
   }
 }
 
-const actions = {
-  changeAllData: (store, data) => {
-    store.commit('CHANGE_ALL_DATA', data)
+const currentSong = {
+  state: {
+    song: {}
   },
-  changeVolume: (store, volume) => {
-    store.commit('CHANGE_VOLUME', volume)
+  getters: {
+    getCurrentSongInfos: state => state.song
   },
-  changePlaylist: (store, playlist) => {
-    store.commit('CHANGE_PLAYLIST', playlist)
+  mutations: {
+    SET_SONG: (state, newSong) => {
+      state.song = newSong
+    }
+  },
+  actions: {
+    setSong: ({state, commit}, newSong) => {
+      commit('SET_SONG', newSong)
+    }
+  }
+}
+
+const stat = {
+  state: {},
+  getters: {},
+  mutations: {},
+  actions: {}
+}
+
+const status = {
+  state: {
+    status: {}
+  },
+  getters: {
+    getStatusInfos: state => state.status
+  },
+  mutations: {
+    SET_ALL_STATUS: (state, newStatus) => {
+      state.status = newStatus
+    },
+    SET_VOLUME: (state, newVolume) => {
+      state.status.volume = newVolume
+    },
+    SET_STATE: (state, newState) => {
+      state.status.state = newState
+    }
+  },
+  actions: {
+    setAllStatus: ({state, commit}, newStatus) => {
+      commit('SET_ALL_STATUS', newStatus)
+    },
+    setState: ({state, commit}, newState) => {
+      commit('SET_STATE', newState)
+    },
+    setVolume: ({state, commit}, newVolume) => {
+      commit('SET_VOLUME', newVolume)
+    }
   }
 }
 
 export default new Vuex.Store({
-  state: state,
-  mutations: mutations,
-  getters: getters,
-  actions: actions,
+  modules: {
+    currentPlaylist: currentPlaylist,
+    currentSong: currentSong,
+    stat: stat,
+    status: status
+  },
   strict: true
 })

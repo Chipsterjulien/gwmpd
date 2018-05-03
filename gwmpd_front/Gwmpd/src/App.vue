@@ -24,7 +24,7 @@
     <div class="">
       <!-- song's volume -->
       <div class="">
-        Volume: {{ getPlayerInfos.volume }}
+        Volume: {{ getStatus.volume }}
       </div>
       <div class="">
         <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>
@@ -53,43 +53,47 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'getPlayerInfos'
-    ])
+    ...mapGetters({
+      getStatus: 'getStatusInfos'
+    })
   },
   methods: {
     ...mapActions([
-      'changeAllData',
-      'changeVolume'
+      'setAllStatus',
+      'setSong',
+      'setVolume',
+      'setState'
     ]),
     lessVolume () {
-      this.$resource('v1/changeVolume').save({volume: this.getPlayerInfos.volume - 5}).then((response) => {
-        this.changeVolume(response.data.volume)
+      this.$resource('v1/setVolume').save({volume: this.getStatus.volume - 5}).then((response) => {
+        this.setVolume(response.data.volume)
       })
     },
     moreVolume () {
-      this.$resource('v1/changeVolume').save({volume: this.getPlayerInfos.volume + 5}).then((response) => {
-        this.changeVolume(response.data.volume)
+      this.$resource('v1/setVolume').save({volume: this.getStatus.volume + 5}).then((response) => {
+        this.setVolume(response.data.volume)
       })
     },
     toggleMuteVolume () {
       this.$resource('v1/toggleMuteVolume').update().then((response) => {
-        this.changeVolume(response.data.volume)
+        this.setVolume(response.data.volume)
       })
     },
     forwardSong () {
       this.$resource('v1/nextSong').get()
     },
     pauseSong () {
-      if (this.getPlayerInfos.state !== 'pause') {
+      if (this.getStatus.state !== 'pause') {
         this.$resource('v1/pauseSong').get().then((response) => {
+          this.setState('pause')
           this.songPlayed = false
         })
       }
     },
     playSong () {
-      if (this.getPlayerInfos.state !== 'play') {
+      if (this.getStatus.state !== 'play') {
         this.$resource('v1/playSong').get().then((response) => {
+          this.setState('play')
           this.songPlayed = true
         })
       }
@@ -98,28 +102,31 @@ export default {
       this.$resource('v1/previousSong').get()
     },
     stopSong () {
-      if (this.getPlayerInfos.state !== 'stop') {
+      if (this.getStatus.state !== 'stop') {
         this.$resource('v1/stopSong').get().then((response) => {
+          this.setState('stop')
           this.songPlayed = false
         })
       }
     }
   },
   mounted () {
-    this.$resource('v1/statusMPD').get().then((response) => {
-      console.log(response.data)
-    })
-    // this.$interval = setInterval(() => {
-    //   this.$resource('v1/currentSong').get().then((response) => {
-    //     this.changeAllData(response.data)
-    //     this.connected = true
-    //     if (response.data.state === 'play') {
-    //       this.songPlayed = true
-    //     }
-    //   }, (response) => {
-    //     this.connected = false
-    //   })
-    // }, 1000)
+    this.$interval = setInterval(() => {
+      this.$resource('v1/statusMPD').get().then((response) => {
+        this.setAllStatus(response.data)
+        this.connected = true
+        if (response.data.state === 'play') {
+          this.$resource('v1/currentSong').get().then((response) => {
+            this.setSong(response.data)
+          })
+          this.songPlayed = true
+        } else {
+          this.songPlayed = false
+        }
+      }, (response) => {
+        this.connected = false
+      })
+    }, 1000)
   },
   beforeUpdate () {
   },

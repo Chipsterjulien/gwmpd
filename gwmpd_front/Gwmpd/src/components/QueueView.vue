@@ -1,11 +1,11 @@
 <template>
   <div class="">
     <div class="">
-      Title song: {{ getPlayerInfos.title }} <br>
-      Album: {{ getPlayerInfos.album }} <br>
-      Groupe: {{ getPlayerInfos.artist }} <br>
-      Consommé: {{ getPlayerInfos.elapsed }}s <br>
-      Temps total: {{ getPlayerInfos.timeSong }}s <br>
+      Title song: {{ currentSong.title }} <br>
+      Album: {{ currentSong.album }} <br>
+      Groupe: {{ currentSong.artist }} <br>
+      Consommé: {{ currentSong.elapsed }}s <br>
+      Temps total: {{ currentSong.timeSong }}s <br>
     </div>
     <div class="">
       <router-view name='SideBar'/>
@@ -22,19 +22,19 @@ export default {
     }
   },
   computed: {
-    ...mapGetters([
-      'getPlayerInfos'
-    ])
+    ...mapGetters({
+      currentSong: 'getCurrentSongInfos'
+    })
   },
   methods: {
     ...mapActions([
-      'changePlaylist'
+      'setPlaylist'
     ])
   },
   mounted () {
-    // this.$resource('v1/getPlaylist').get().then((response) => {
-    //   this.changePlaylist(response.data)
-    // })
+    this.$resource('v1/currentPlaylist').get().then((response) => {
+      this.setPlaylist(response.data)
+    })
   }
 }
 </script>
