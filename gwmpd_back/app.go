@@ -17,49 +17,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-//************************************
-// Exemple de playlist renvoyé par mpd
-//************************************
-
-// file: Mp3 varies/Dessins animés/Attaquantes_G�n�rique.mp3
-// Last-Modified: 2008-05-26T21:12:13Z
-// Artist: ?
-// Title: Les attaquantes
-// Album: Attaquantes
-// Date: 1988
-// Genre: Oldies
-// Time: 155
-// duration: 154.706
-// Pos: 0
-// Id: 1
-
-// file: Toy-Box_-_Eenie_Meenie_Miney_Mo_(1999).mp3
-// Last-Modified: 2015-11-26T13:17:22Z
-// Time: 198
-// duration: 198.217
-// Pos: 1
-// Id: 2
-
-// file: Skyfall - Adele.mp3
-// Last-Modified: 2014-09-03T13:04:02Z
-// Artist: Adele
-// Title: Skyfall - Adele
-// Track: 4294967295
-// Date: -1
-// Time: 289
-// duration: 289.336
-// Pos: 2
-// Id: 3
-
-// file: Krewella-Alive.mp3
-// Last-Modified: 2013-10-13T12:48:19Z
-// Title: Krewella - Alive
-// Track: 1
-// Time: 207
-// duration: 206.544
-// Pos: 3
-// Id: 4
-
 // Regarder ici pour l'authentification: https://github.com/appleboy/gin-jwt
 
 // Pour les commandes mpd via le socket:
@@ -72,13 +29,13 @@ type com struct {
 	mpdResponseChan  chan []byte
 	cmdToConsume     chan []byte
 	info             *mpdInfos
-	// waitPermissionToSendJSONAtVue chan bool
 }
 
 type mpdInfos struct {
-	currentSong *mpdCurrentSong
-	status      *mpdStatus
-	stat        *mpdStat
+	currentPlaylist []mpdCurrentSong
+	currentSong     *mpdCurrentSong
+	stat            *mpdStat
+	status          *mpdStatus
 }
 
 type mpdCurrentSong struct {
@@ -291,9 +248,10 @@ func (e *com) getPauseSong(c *gin.Context) {
 	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
-func (e *com) getPlaylist(c *gin.Context) {
+func (e *com) getCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.sendCmdToMPDChan <- []byte("playlistinfo")
+	mySong := mpdCurrentSong{}
 
 	for {
 		line := <-e.cmdToConsume
@@ -301,8 +259,54 @@ func (e *com) getPlaylist(c *gin.Context) {
 			break
 		}
 
-		first, _ := splitLine(&line)
+		first, end := splitLine(&line)
 		switch first {
+		case "Album":
+			mySong.album = end
+		case "Artist":
+			mySong.artist = end
+		case "Composer":
+		case "Date":
+			mySong.date = end
+		case "duration":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"duration\" %s", end)
+				continue
+			}
+			mySong.duration = f
+		case "file":
+			mySong.file = end
+		case "Genre":
+			mySong.genre = end
+		case "Id":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Id\" %s", end)
+				continue
+			}
+			mySong.id = i
+			e.info.currentPlaylist = append(e.info.currentPlaylist, mySong)
+			mySong = mpdCurrentSong{}
+		case "Last-Modified":
+			mySong.lastModified = end
+		case "Pos":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Pos\" %s", end)
+				continue
+			}
+			mySong.pos = i
+		case "Time":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"volume\" %s", end)
+				continue
+			}
+			mySong.time = i
+		case "Title":
+			mySong.title = end
+		case "Track":
 		default:
 			log.Errorf("In getPlaylist, unknown: \"%s\"\n", first)
 		}
@@ -508,7 +512,7 @@ func initGin(com *com) {
 		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
-		v1.GET("/getPlaylist", com.getPlaylist)
+		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
@@ -558,14 +562,15 @@ func startApp() {
 	cmdToConsume := make(chan []byte, 100)
 
 	com := &com{
-		sendCmdToMPDChan: sendCmdToMPDChan,
-		mpdResponseChan:  mpdResponseChan,
 		cmdToConsume:     cmdToConsume,
+		mpdResponseChan:  mpdResponseChan,
+		sendCmdToMPDChan: sendCmdToMPDChan,
 
 		info: &mpdInfos{
-			currentSong: &mpdCurrentSong{},
-			status:      &mpdStatus{},
-			stat:        &mpdStat{},
+			currentPlaylist: []mpdCurrentSong{},
+			currentSong:     &mpdCurrentSong{},
+			stat:            &mpdStat{},
+			status:          &mpdStatus{},
 		},
 	}
 
