@@ -31,7 +31,6 @@ type com struct {
 	sendCmdToMPDChan chan []byte
 	mutex            *sync.Mutex
 	info             *mpdInfos
-	// orderCmdChan     chan bool
 }
 
 type mpdInfos struct {
@@ -42,50 +41,50 @@ type mpdInfos struct {
 }
 
 type mpdCurrentSong struct {
-	album        string
-	artist       string
-	date         string
-	duration     float64
-	file         string
-	genre        string
-	id           int
-	lastModified string
-	pos          int
-	time         int
-	title        string
-	track        int
+	Album        string
+	Artist       string
+	Date         string
+	Duration     float64
+	File         string
+	Genre        string
+	Id           int
+	LastModified string
+	Pos          int
+	Time         int
+	Title        string
+	Track        int
 }
 
 type mpdStatus struct {
-	audio          string
-	bitrate        string
-	consume        bool
-	duration       float64
-	elapsed        float64
-	mixrampDB      float64
-	nextSong       int
-	nextSongID     int
-	playlist       int
-	playlistLength int
-	random         bool
-	repeat         bool
-	single         bool
-	song           int
-	songID         int
-	state          string
-	time           string
-	volume         int
-	volumeSav      int
+	Audio          string
+	Bitrate        string
+	Consume        bool
+	Duration       float64
+	Elapsed        float64
+	MixrampDB      float64
+	NextSong       int
+	NextSongID     int
+	Playlist       int
+	PlaylistLength int
+	Random         bool
+	Repeat         bool
+	Single         bool
+	Song           int
+	SongID         int
+	State          string
+	Time           string
+	Volume         int
+	VolumeSav      int
 }
 
 type mpdStat struct {
-	albums     int
-	artists    int
-	dbPlaytime string
-	dbUpdate   string
-	playtime   string
-	songs      int
-	uptime     string
+	Albums     int
+	Artists    int
+	DBPlaytime string
+	DBUpdate   string
+	Playtime   string
+	Songs      int
+	Uptime     string
 }
 
 type volumeForm struct {
@@ -105,21 +104,21 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		first, end := splitLine(&line)
 		switch first {
 		case "Album":
-			e.info.currentSong.album = end
+			e.info.currentSong.Album = end
 		case "Artist":
-			e.info.currentSong.artist = end
+			e.info.currentSong.Artist = end
 		case "Composer":
 		case "Date":
-			e.info.currentSong.date = end
+			e.info.currentSong.Date = end
 		case "duration":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"duration\" %s", end)
 				continue
 			}
-			e.info.currentSong.duration = f
+			e.info.currentSong.Duration = f
 		case "file":
-			e.info.currentSong.file = end
+			e.info.currentSong.File = end
 		case "Genre":
 		case "Id":
 			i, err := strconv.Atoi(end)
@@ -127,25 +126,25 @@ func (e *com) getCurrentSong(c *gin.Context) {
 				log.Warningf("Unable to convert \"Id\" %s", end)
 				continue
 			}
-			e.info.currentSong.id = i
+			e.info.currentSong.Id = i
 		case "Last-Modified":
-			e.info.currentSong.lastModified = end
+			e.info.currentSong.LastModified = end
 		case "Pos":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"Pos\" %s", end)
 				continue
 			}
-			e.info.currentSong.pos = i
+			e.info.currentSong.Pos = i
 		case "Title":
-			e.info.currentSong.title = end
+			e.info.currentSong.Title = end
 		case "Time":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"volume\" %s", end)
 				continue
 			}
-			e.info.currentSong.time = i
+			e.info.currentSong.Time = i
 		case "Track":
 		default:
 			log.Errorf("In getCurrentSong, unknown: \"%s\"\n", first)
@@ -153,12 +152,16 @@ func (e *com) getCurrentSong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{
-		"file":          e.info.currentSong.file,
-		"Last-Modified": e.info.currentSong.lastModified,
-		"Time":          e.info.currentSong.time,
-		"duration":      e.info.currentSong.duration,
-		"Pos":           e.info.currentSong.pos,
-		"Id":            e.info.currentSong.id,
+		"Album":         e.info.currentSong.Album,
+		"Artist":        e.info.currentSong.Artist,
+		"Date":          e.info.currentSong.Date,
+		"duration":      e.info.currentSong.Duration,
+		"file":          e.info.currentSong.File,
+		"Id":            e.info.currentSong.Id,
+		"Last-Modified": e.info.currentSong.LastModified,
+		"Pos":           e.info.currentSong.Pos,
+		"Title":         e.info.currentSong.Title,
+		"Time":          e.info.currentSong.Time,
 	})
 }
 
@@ -276,6 +279,7 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("playlistinfo")
+	e.info.currentPlaylist = []mpdCurrentSong{}
 	mySong := mpdCurrentSong{}
 
 	for {
@@ -288,76 +292,57 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 		first, end := splitLine(&line)
 		switch first {
 		case "Album":
-			mySong.album = end
+			mySong.Album = end
 		case "Artist":
-			mySong.artist = end
+			mySong.Artist = end
 		case "Composer":
 		case "Date":
-			mySong.date = end
+			mySong.Date = end
 		case "duration":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"duration\" %s", end)
 				continue
 			}
-			mySong.duration = f
+			mySong.Duration = f
 		case "file":
-			mySong.file = end
+			mySong.File = end
 		case "Genre":
-			mySong.genre = end
+			mySong.Genre = end
 		case "Id":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"Id\" %s", end)
 				continue
 			}
-			mySong.id = i
+			mySong.Id = i
 			e.info.currentPlaylist = append(e.info.currentPlaylist, mySong)
 			mySong = mpdCurrentSong{}
 		case "Last-Modified":
-			mySong.lastModified = end
+			mySong.LastModified = end
 		case "Pos":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"Pos\" %s", end)
 				continue
 			}
-			mySong.pos = i
+			mySong.Pos = i
 		case "Time":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"volume\" %s", end)
 				continue
 			}
-			mySong.time = i
+			mySong.Time = i
 		case "Title":
-			mySong.title = end
+			mySong.Title = end
 		case "Track":
 		default:
 			log.Errorf("In getPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
 
-	// ************************************************************************************
-	// Un début de solution pour imbriquer les infos facilement et ensuite obtenir un JSON:
-	// https://github.com/gin-gonic/gin/issues/87
-	// ************************************************************************************
-
-	// file: Mp3 varies/Dessins animés/Attaquantes_G�n�rique.mp3
-	// Last-Modified: 2008-05-26T21:12:13Z
-	// Artist: ?
-	// Title: Les attaquantes
-	// Album: Attaquantes
-	// Date: 1988
-	// Genre: Oldies
-	// Time: 155
-	// duration: 154.706
-	// Pos: 0
-	// Id: 1
-
-	// res := []string{"foo", "bar"}
-	res := map[string]int{"foo": 1, "bar": 2}
-	c.JSON(200, res)
+	c.JSON(200, e.info.currentPlaylist)
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
@@ -375,14 +360,14 @@ func (e *com) getStatusMPD(c *gin.Context) {
 		first, end := splitLine(&line)
 		switch first {
 		case "audio":
-			e.info.status.audio = end
+			e.info.status.Audio = end
 		case "bitrate":
-			e.info.status.bitrate = end
+			e.info.status.Bitrate = end
 		case "consume":
 			if end == "1" {
-				e.info.status.consume = true
+				e.info.status.Consume = true
 			} else {
-				e.info.status.consume = false
+				e.info.status.Consume = false
 			}
 		case "duration":
 			f, err := strconv.ParseFloat(end, 64)
@@ -390,52 +375,52 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				log.Warningf("Unable to convert \"duration\" %s", end)
 				continue
 			}
-			e.info.status.duration = f
+			e.info.status.Duration = f
 		case "elapsed":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"elapsed\" %s", end)
 				continue
 			}
-			e.info.status.elapsed = f
+			e.info.status.Elapsed = f
 		case "mixrampdb":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"mixrampdb\" %s", end)
 				continue
 			}
-			e.info.status.mixrampDB = f
+			e.info.status.MixrampDB = f
 		case "playlist":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"playlist\" %s", end)
 				continue
 			}
-			e.info.status.playlist = i
+			e.info.status.Playlist = i
 		case "playlistlength":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"playlistlength\" %s", end)
 				continue
 			}
-			e.info.status.playlistLength = i
+			e.info.status.PlaylistLength = i
 		case "random":
 			if end == "1" {
-				e.info.status.random = true
+				e.info.status.Random = true
 			} else {
-				e.info.status.random = false
+				e.info.status.Random = false
 			}
 		case "repeat":
 			if end == "1" {
-				e.info.status.repeat = true
+				e.info.status.Repeat = true
 			} else {
-				e.info.status.repeat = false
+				e.info.status.Repeat = false
 			}
 		case "single":
 			if end == "1" {
-				e.info.status.single = true
+				e.info.status.Single = true
 			} else {
-				e.info.status.single = false
+				e.info.status.Single = false
 			}
 		case "song":
 			i, err := strconv.Atoi(end)
@@ -443,7 +428,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				log.Warningf("Unable to convert \"song\" %s", end)
 				continue
 			}
-			e.info.status.song = i
+			e.info.status.Song = i
 		case "songid":
 			i, err := strconv.Atoi(end)
 			if err != nil {
@@ -451,51 +436,55 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				log.Warningf("Unable to convert \"songid\" %s", end)
 				continue
 			}
-			e.info.status.songID = i
+			e.info.status.SongID = i
 		case "nextsong":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"nextsong\" %s", end)
 				continue
 			}
-			e.info.status.nextSong = i
+			e.info.status.NextSong = i
 		case "nextsongid":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"nextsongid\" %s", end)
 				continue
 			}
-			e.info.status.nextSongID = i
+			e.info.status.NextSongID = i
 		case "state":
-			e.info.status.state = end
+			e.info.status.State = end
 		case "time":
-			e.info.status.time = end
+			e.info.status.Time = end
 		case "volume":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"volume\" %s", end)
 				continue
 			}
-			e.info.status.volume = i
+			e.info.status.Volume = i
 		default:
 			log.Errorf("In getStatusMPD, unknown: \"%s\"\n", first)
 		}
 	}
 
 	c.JSON(200, gin.H{
-		"consume":        e.info.status.consume,
-		"mixrampdb":      e.info.status.mixrampDB,
-		"playlist":       e.info.status.playlist,
-		"playlistlength": e.info.status.playlistLength,
-		"random":         e.info.status.random,
-		"repeat":         e.info.status.repeat,
-		"single":         e.info.status.single,
-		"song":           e.info.status.song,
-		"songid":         e.info.status.songID,
-		"nextsong":       e.info.status.nextSong,
-		"nextsongid":     e.info.status.nextSongID,
-		"state":          e.info.status.state,
-		"volume":         e.info.status.volume,
+		"audio":          e.info.status.Audio,
+		"bitrate":        e.info.status.Bitrate,
+		"consume":        e.info.status.Consume,
+		"duration":       e.info.status.Duration,
+		"elapsed":        e.info.status.Elapsed,
+		"mixrampdb":      e.info.status.MixrampDB,
+		"playlist":       e.info.status.Playlist,
+		"playlistlength": e.info.status.PlaylistLength,
+		"random":         e.info.status.Random,
+		"repeat":         e.info.status.Repeat,
+		"single":         e.info.status.Single,
+		"song":           e.info.status.Song,
+		"songid":         e.info.status.SongID,
+		"nextsong":       e.info.status.NextSong,
+		"nextsongid":     e.info.status.NextSongID,
+		"state":          e.info.status.State,
+		"volume":         e.info.status.Volume,
 	})
 }
 
@@ -505,7 +494,7 @@ func (e *com) setVolume(c *gin.Context) {
 
 	if err := c.ShouldBind(&vol); err == nil {
 		e.mutex.Lock()
-		e.info.status.volume = vol.Volume
+		e.info.status.Volume = vol.Volume
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
 		for {
 			line := <-e.cmdToConsumeChan
@@ -521,7 +510,7 @@ func (e *com) setVolume(c *gin.Context) {
 			}
 		}
 
-		c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.status.volume})
+		c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.status.Volume})
 	} else {
 		log.Warningf("Unable to set volume to \"%v\": %s\n", vol.Volume, err)
 	}
@@ -530,15 +519,15 @@ func (e *com) setVolume(c *gin.Context) {
 func (e *com) toggleMuteVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
-	if e.info.status.volume == 0 {
-		e.info.status.volume = e.info.status.volumeSav
-		e.info.status.volumeSav = 0
+	if e.info.status.Volume == 0 {
+		e.info.status.Volume = e.info.status.VolumeSav
+		e.info.status.VolumeSav = 0
 	} else {
-		e.info.status.volumeSav = e.info.status.volume
-		e.info.status.volume = 0
+		e.info.status.VolumeSav = e.info.status.Volume
+		e.info.status.Volume = 0
 	}
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.status.volume))
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.status.Volume))
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -554,7 +543,7 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.volume})
+	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.Volume})
 }
 
 func initGin(com *com) {
