@@ -147,7 +147,7 @@ func (e *com) getCurrentSong(c *gin.Context) {
 			e.info.currentSong.Time = i
 		case "Track":
 		default:
-			log.Errorf("In getCurrentSong, unknown: \"%s\"\n", first)
+			log.Infof("In getCurrentSong, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -180,7 +180,7 @@ func (e *com) getPreviousSong(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Errorf("In getPreviousSong, unknown: \"%s\"\n", first)
+			log.Infof("In getPreviousSong, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -202,7 +202,7 @@ func (e *com) getNextSong(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Errorf("In getNextSong, unknown: \"%s\"\n", first)
+			log.Infof("In getNextSong, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -224,7 +224,7 @@ func (e *com) getStopSong(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Errorf("In getStopSong, unknown: \"%s\"\n", first)
+			log.Infof("In getStopSong, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -246,7 +246,7 @@ func (e *com) getPlaySong(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Errorf("In getPlaySong, unknown: \"%s\"\n", first)
+			log.Infof("In getPlaySong, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -268,7 +268,7 @@ func (e *com) getPauseSong(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Errorf("In getPauseSong, unknown: \"%s\"\n", first)
+			log.Infof("In getPauseSong, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -338,7 +338,7 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 			mySong.Title = end
 		case "Track":
 		default:
-			log.Errorf("In getPlaylist, unknown: \"%s\"\n", first)
+			log.Infof("In getCurrentPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -463,7 +463,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 			}
 			e.info.status.Volume = i
 		default:
-			log.Errorf("In getStatusMPD, unknown: \"%s\"\n", first)
+			log.Infof("In getStatusMPD, unknown: \"%s\"\n", first)
 		}
 	}
 
@@ -506,7 +506,7 @@ func (e *com) setVolume(c *gin.Context) {
 			first, _ := splitLine(&line)
 			switch first {
 			default:
-				log.Errorf("In setVolume, unknown: \"%s\"\n", first)
+				log.Infof("In setVolume, unknown: \"%s\"\n", first)
 			}
 		}
 
@@ -539,7 +539,7 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Errorf("In toggleMuteVolume, unknown: \"%s\"\n", first)
+			log.Infof("In toggleMuteVolume, unknown: \"%s\"\n", first)
 		}
 	}
 
