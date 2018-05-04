@@ -1,11 +1,23 @@
 <template>
   <div class="">
     <div class="">
-      Title song: {{ currentSong.title }} <br>
-      Album: {{ currentSong.album }} <br>
-      Groupe: {{ currentSong.artist }} <br>
-      Consommé: {{ currentSong.elapsed }}s <br>
-      Temps total: {{ currentSong.timeSong }}s <br>
+      Title song: {{ currentSong.Title }} <br>
+      Album: {{ currentSong.Album }} <br>
+      Groupe: {{ currentSong.Artist }} <br>
+      Consommé: {{ status.elapsed }}s <br>
+      Temps total: {{ currentSong.Time }}s <br>
+    </div>
+    <br>
+    <br>
+    <div class="">
+      <table>
+        <tr>
+          <th>Title</th>
+        </tr>
+        <tr v-for="(k,v) in currentPlaylist" :key="v">
+          <td>{{ k.Title }}</td>
+        </tr>
+      </table>
     </div>
     <div class="">
       <router-view name='SideBar'/>
@@ -23,7 +35,9 @@ export default {
   },
   computed: {
     ...mapGetters({
-      currentSong: 'getCurrentSongInfos'
+      currentSong: 'getCurrentSongInfos',
+      status: 'getStatusInfos',
+      currentPlaylist: 'getCurrentPlaylist'
     })
   },
   methods: {
