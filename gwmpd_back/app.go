@@ -91,6 +91,28 @@ type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
 
+func (e *com) getAllFiles(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte("listfiles")
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In getAllFiles, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{})
+}
+
 func (e *com) getCurrentSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.sendCmdToMPDChan <- []byte("currentsong")
@@ -235,6 +257,29 @@ func (e *com) getPlaySong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("play")
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In getPlaySong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"playSong": "ok"})
+}
+
+func (e *com) getPlaySongWithID(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	pos := c.Param("pos")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- append([]byte("play "), []byte(pos)...)
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -570,12 +615,14 @@ func initGin(com *com) {
 		v1.GET("/currentSong", com.getCurrentSong)
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.GET("/playSong", com.getPlaySong)
+		v1.GET("/playSong/:pos", com.getPlaySongWithID)
 		v1.GET("/previousSong", com.getPreviousSong)
 		v1.GET("/nextSong", com.getNextSong)
 		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
 		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
+		v1.GET("/allFiles", com.getAllFiles)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
