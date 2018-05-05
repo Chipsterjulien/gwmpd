@@ -5,6 +5,9 @@ There are 2 parts:
 * the backend which written in Go. It communicates with mpd and web GUI
 * the frontend which written in JS (vuejs)
 
+__Be careful. Actually, there is NO security between gui and the REST API so make local test__
+__DO NOT expose REST API on internet !__
+
 ## Dependencies
 * go
 * gin
