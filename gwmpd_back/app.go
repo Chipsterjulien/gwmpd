@@ -670,20 +670,20 @@ func initGin(com *com) {
 
 	v1 := g.Group("/v1")
 	{
-		v1.POST("/setVolume", com.setVolume)
+		v1.GET("/allPlaylists", com.getAllPlaylists)
+		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
+		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
 		v1.GET("/currentSong", com.getCurrentSong)
+		v1.GET("/loadPlaylist/:name", com.getLoadPlaylist)
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.GET("/playSong", com.getPlaySong)
 		v1.GET("/playSong/:pos", com.getPlaySongWithID)
 		v1.GET("/previousSong", com.getPreviousSong)
 		v1.GET("/nextSong", com.getNextSong)
+		v1.POST("/setVolume", com.setVolume)
 		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
-		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
-		v1.GET("/allPlaylists", com.getAllPlaylists)
-		v1.GET("/loadPlaylist/:name", com.getLoadPlaylist)
-		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
