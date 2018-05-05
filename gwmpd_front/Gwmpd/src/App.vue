@@ -3,7 +3,7 @@
     <div class="TopBar">
       {{ appName }}
       <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
-      <router-link :to="{ name: 'PlaylistView', params: {} }">Playlist</router-link>
+      <router-link :to="{ name: 'PlaylistView', params: {} }">Playlists</router-link>
       <router-link :to="{ name: 'AboutView', params: {} }">About</router-link>
     </div>
     <div class="">
@@ -43,9 +43,7 @@
 </template>
 
 <script>
-
 import { mapGetters, mapActions } from 'vuex'
-
 export default {
   name: 'App',
   data () {

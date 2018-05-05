@@ -92,10 +92,36 @@ type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
 
-func (e *com) getAllFiles(c *gin.Context) {
+func (e *com) getAllPlaylists(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("listfiles")
+	e.sendCmdToMPDChan <- []byte("listplaylists")
+	playlists := []string{}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, end := splitLine(&line)
+		switch first {
+		case "playlist":
+			playlists = append(playlists, end)
+		case "Last-Modified":
+		default:
+			log.Infof("In getAllFiles, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, playlists)
+}
+
+func (e *com) getClearCurrentPlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte("clear")
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -107,11 +133,11 @@ func (e *com) getAllFiles(c *gin.Context) {
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Infof("In getAllFiles, unknown: \"%s\"\n", first)
+			log.Infof("In getClearCurrentPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
 
-	c.JSON(200, gin.H{})
+	c.JSON(200, gin.H{"clearCurrentPlaylist": "ok"})
 }
 
 func (e *com) getCurrentSong(c *gin.Context) {
@@ -186,6 +212,29 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		"Title":         e.info.currentSong.Title,
 		"Time":          e.info.currentSong.Time,
 	})
+}
+
+func (e *com) getLoadPlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	name := c.Param("name")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- append([]byte("load "), []byte(name)...)
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In getloadPlaylist, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"loadPlaylist": name})
 }
 
 func (e *com) getPreviousSong(c *gin.Context) {
@@ -632,7 +681,9 @@ func initGin(com *com) {
 		v1.GET("/stopSong", com.getStopSong)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
 		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
-		v1.GET("/allFiles", com.getAllFiles)
+		v1.GET("/allPlaylists", com.getAllPlaylists)
+		v1.GET("/loadPlaylist/:name", com.getLoadPlaylist)
+		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))

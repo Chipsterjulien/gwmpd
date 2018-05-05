@@ -22,6 +22,25 @@ const currentPlaylist = {
   }
 }
 
+const allPlaylists = {
+  state: {
+    allPlaylists: []
+  },
+  getters: {
+    getAllPlaylists: state => state.allPlaylists
+  },
+  mutations: {
+    SET_ALL_PLAYLISTS: (state, newPlaylists) => {
+      state.allPlaylists = newPlaylists
+    }
+  },
+  actions: {
+    setAllPlaylists: ({state, commit}, newPlaylists) => {
+      commit('SET_ALL_PLAYLISTS', newPlaylists)
+    }
+  }
+}
+
 const currentSong = {
   state: {
     song: {}
@@ -87,6 +106,7 @@ const status = {
 
 export default new Vuex.Store({
   modules: {
+    allPlaylists: allPlaylists,
     currentPlaylist: currentPlaylist,
     currentSong: currentSong,
     stat: stat,
