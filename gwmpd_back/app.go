@@ -61,6 +61,7 @@ type mpdStatus struct {
 	Consume        bool
 	Duration       float64
 	Elapsed        float64
+	Error          string
 	MixrampDB      float64
 	NextSong       int
 	NextSongID     int
@@ -428,6 +429,8 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				continue
 			}
 			e.info.status.Elapsed = f
+		case "error":
+			e.info.status.Error = end
 		case "mixrampdb":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
