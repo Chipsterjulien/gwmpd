@@ -32,6 +32,9 @@
         <button type="button" name="moreVolume" @click="moreVolume">More</button>
       </div>
     </div>
+    <div class="" v-if="getStatus.error !== ''">
+      Error: {{ getStatus.error }}
+    </div>
     <div class="">
       <router-view/>
       <router-view name="SideBar"/>

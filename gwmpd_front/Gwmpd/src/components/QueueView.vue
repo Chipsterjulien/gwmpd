@@ -20,7 +20,7 @@
           <td>{{ k.Id }}</td>
           <td>{{ k.Title }}</td>
           <td>{{ k.Time }}</td>
-          <td v-if="currentSong.Id !== k.Id"><button @click="playSong(k.Pos)">play</button></td>
+          <td v-if="currentSong.Id !== k.Id"><button @click="playSong(k.Id, k.Pos)">play</button></td>
         </tr>
       </table>
     </div>
@@ -48,10 +48,12 @@ export default {
   methods: {
     ...mapActions([
       'setPlaylist',
-      'setState'
+      'setState',
+      'setID'
     ]),
-    playSong (pos) {
+    playSong (id, pos) {
       this.$resource('v1/playSong{/pos}').get({pos: pos}).then((response) => {
+        this.setID(id)
         if (this.songPlayed !== true) {
           this.setState('play')
           this.songPlayed = true

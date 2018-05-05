@@ -32,11 +32,17 @@ const currentSong = {
   mutations: {
     SET_SONG: (state, newSong) => {
       state.song = newSong
+    },
+    SET_ID: (state, newID) => {
+      state.song.Id = newID
     }
   },
   actions: {
     setSong: ({state, commit}, newSong) => {
       commit('SET_SONG', newSong)
+    },
+    setID: ({state, commit}, newID) => {
+      commit('SET_ID', newID)
     }
   }
 }

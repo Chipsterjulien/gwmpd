@@ -395,6 +395,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("status")
+	errorIsNotDefine := true
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -430,6 +431,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 			}
 			e.info.status.Elapsed = f
 		case "error":
+			errorIsNotDefine = false
 			e.info.status.Error = end
 		case "mixrampdb":
 			f, err := strconv.ParseFloat(end, 64)
@@ -515,12 +517,17 @@ func (e *com) getStatusMPD(c *gin.Context) {
 		}
 	}
 
+	if errorIsNotDefine {
+		e.info.status.Error = ""
+	}
+
 	c.JSON(200, gin.H{
 		"audio":          e.info.status.Audio,
 		"bitrate":        e.info.status.Bitrate,
 		"consume":        e.info.status.Consume,
 		"duration":       e.info.status.Duration,
 		"elapsed":        e.info.status.Elapsed,
+		"error":          e.info.status.Error,
 		"mixrampdb":      e.info.status.MixrampDB,
 		"playlist":       e.info.status.Playlist,
 		"playlistlength": e.info.status.PlaylistLength,
