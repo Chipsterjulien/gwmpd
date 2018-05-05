@@ -8,7 +8,9 @@
 export default {
   name: 'PlaylistView',
   mounted () {
-    console.log('Je passe dans mounted de playlist')
+    this.$resource('v1/allFiles').get().then((response) => {
+      console.log(response.data)
+    })
   }
 }
 </script>

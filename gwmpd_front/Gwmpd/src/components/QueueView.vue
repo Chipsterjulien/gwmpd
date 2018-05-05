@@ -12,10 +12,15 @@
     <div class="">
       <table>
         <tr>
+          <th>#</th>
           <th>Title</th>
+          <th>Duration</th>
         </tr>
         <tr v-for="(k,v) in currentPlaylist" :key="v">
+          <td>{{ k.Id }}</td>
           <td>{{ k.Title }}</td>
+          <td>{{ k.Time }}</td>
+          <td v-if="currentSong.Id !== k.Id"><button @click="playSong(k.Pos)">play</button></td>
         </tr>
       </table>
     </div>
@@ -42,12 +47,20 @@ export default {
   },
   methods: {
     ...mapActions([
-      'setPlaylist'
-    ])
+      'setPlaylist',
+      'setState'
+    ]),
+    playSong (pos) {
+      this.$resource('v1/playSong{/pos}').get({pos: pos}).then((response) => {
+        if (this.songPlayed !== true) {
+          this.setState('play')
+          this.songPlayed = true
+        }
+      })
+    }
   },
   mounted () {
     this.$resource('v1/currentPlaylist').get().then((response) => {
-      console.log(response.data)
       this.setPlaylist(response.data)
     })
   }
