@@ -620,6 +620,122 @@ func (e *com) setVolume(c *gin.Context) {
 	}
 }
 
+func (e *com) toggleConsume(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
+	e.info.status.Consume = !e.info.status.Consume
+
+	if e.info.status.Consume {
+		e.sendCmdToMPDChan <- []byte("consume 1")
+	} else {
+		e.sendCmdToMPDChan <- []byte("consume 0")
+	}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In toggleConsume, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"toggleConsume": "ok", "consume": e.info.status.Consume})
+}
+
+func (e *com) toggleRandom(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
+	e.info.status.Random = !e.info.status.Random
+
+	if e.info.status.Random {
+		e.sendCmdToMPDChan <- []byte("random 1")
+	} else {
+		e.sendCmdToMPDChan <- []byte("random 0")
+	}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In toggleRandom, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"toggleRandom": "ok", "random": e.info.status.Random})
+}
+
+func (e *com) toggleRepeat(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
+	e.info.status.Repeat = !e.info.status.Repeat
+
+	if e.info.status.Repeat {
+		e.sendCmdToMPDChan <- []byte("repeat 1")
+	} else {
+		e.sendCmdToMPDChan <- []byte("repeat 0")
+	}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In toggleRepeat, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"toggleRepeat": "ok", "repeat": e.info.status.Repeat})
+}
+
+func (e *com) toggleSingle(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
+	e.info.status.Single = !e.info.status.Single
+
+	if e.info.status.Single {
+		e.sendCmdToMPDChan <- []byte("single 1")
+	} else {
+		e.sendCmdToMPDChan <- []byte("single 0")
+	}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In toggleSingle, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"toggleSingle": "ok", "single": e.info.status.Single})
+}
+
 func (e *com) toggleMuteVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -648,6 +764,29 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.Volume})
+}
+
+func (e *com) updateDB(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte("update")
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		case "updating_db":
+		default:
+			log.Infof("In updateDB, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"updateDB": "ok"})
 }
 
 func initGin(com *com) {
@@ -683,7 +822,12 @@ func initGin(com *com) {
 		v1.POST("/setVolume", com.setVolume)
 		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)
+		v1.PUT("/toggleConsume", com.toggleConsume)
+		v1.PUT("/toggleRandom", com.toggleRandom)
+		v1.PUT("/toggleSingle", com.toggleSingle)
+		v1.PUT("/toggleRepeat", com.toggleRepeat)
 		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
+		v1.GET("/updateDB", com.updateDB)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))

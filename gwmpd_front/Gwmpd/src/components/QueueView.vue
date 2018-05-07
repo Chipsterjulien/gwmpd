@@ -10,14 +10,14 @@
     <br>
     <br>
     <div class="">
-      <table>
+      <table v-if="currentPlaylist.length">
         <tr>
           <th>#</th>
           <th>Title</th>
           <th>Duration</th>
         </tr>
         <tr v-for="(k,v) in currentPlaylist" :key="v">
-          <td>{{ k.Id }}</td>
+          <td>{{ k.Pos + 1 }}</td>
           <td>{{ k.Title }}</td>
           <td>{{ k.Time }}</td>
           <td v-if="currentSong.Id !== k.Id"><button @click="playSong(k.Id, k.Pos)">play</button></td>

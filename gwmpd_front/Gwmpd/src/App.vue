@@ -55,7 +55,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      getStatus: 'getStatusInfos'
+      getStatus: 'getStatusInfos',
+      getCurrentSongInfos: 'getCurrentSongInfos'
     })
   },
   methods: {
@@ -63,6 +64,7 @@ export default {
       'setAllStatus',
       'setSong',
       'setVolume',
+      'setPlaylist',
       'setState'
     ]),
     lessVolume () {
@@ -118,6 +120,11 @@ export default {
         this.connected = true
         if (response.data.state === 'play') {
           this.$resource('v1/currentSong').get().then((response) => {
+            if (this.getCurrentSongInfos.Title !== response.data.Title) {
+              this.$resource('v1/currentPlaylist').get().then((response) => {
+                this.setPlaylist(response.data)
+              })
+            }
             this.setSong(response.data)
           })
           this.songPlayed = true

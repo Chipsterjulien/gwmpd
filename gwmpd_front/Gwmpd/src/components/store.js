@@ -84,16 +84,40 @@ const status = {
     SET_ALL_STATUS: (state, newStatus) => {
       state.status = newStatus
     },
-    SET_VOLUME: (state, newVolume) => {
-      state.status.volume = newVolume
+    SET_CONSUME: (state, newConsume) => {
+      state.status.consume = newConsume
+    },
+    SET_RANDOM: (state, newRandom) => {
+      state.status.random = newRandom
+    },
+    SET_REPEAT: (state, newRepeat) => {
+      state.status.repeat = newRepeat
+    },
+    SET_SINGLE: (state, newSingle) => {
+      state.status.single = newSingle
     },
     SET_STATE: (state, newState) => {
       state.status.state = newState
+    },
+    SET_VOLUME: (state, newVolume) => {
+      state.status.volume = newVolume
     }
   },
   actions: {
     setAllStatus: ({state, commit}, newStatus) => {
       commit('SET_ALL_STATUS', newStatus)
+    },
+    setConsume: ({state, commit}, newConsume) => {
+      commit('SET_CONSUME', newConsume)
+    },
+    setRandom: ({state, commit}, newRandom) => {
+      commit('SET_RANDOM', newRandom)
+    },
+    setRepeat: ({state, commit}, newRepeat) => {
+      commit('SET_REPEAT', newRepeat)
+    },
+    setSingle: ({state, commit}, newSingle) => {
+      commit('SET_SINGLE', newSingle)
     },
     setState: ({state, commit}, newState) => {
       commit('SET_STATE', newState)
