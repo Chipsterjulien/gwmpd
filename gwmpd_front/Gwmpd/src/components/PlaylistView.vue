@@ -3,6 +3,7 @@
     <br>
     <br>
 
+    <button type="button" name="button">New playlist</button>
     <table>
       <tr>
         <th>#</th>
@@ -13,6 +14,7 @@
         <td>{{ name }}</td>
         <td><button type="button" @click="clearAndLoadPlaylist(name)">Replace the playlist</button></td>
         <td><button type="button" @click="loadPlaylist(name)">Append to playlist</button></td>
+        <td><button type="button" @click="loadPlaylist(name)">Remove</button></td>
       </tr>
     </table>
   </div>
