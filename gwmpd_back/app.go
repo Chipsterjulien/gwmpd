@@ -25,6 +25,7 @@ import (
 
 // Com ma chin chose à mettre correctement
 // Pour plus d'info, voir ici: https://github.com/gin-gonic/gin/issues/932
+
 type com struct {
 	cmdToConsumeChan chan []byte
 	mpdResponseChan  chan []byte
@@ -86,6 +87,10 @@ type mpdStat struct {
 	Playtime   string
 	Songs      int
 	Uptime     string
+}
+
+type playlistNameForm struct {
+	PlaylistName string `form:"playlistName" binding:"required"`
 }
 
 type volumeForm struct {
@@ -592,6 +597,60 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	})
 }
 
+func (e *com) removePlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var playlistName playlistNameForm
+
+	if err := c.ShouldBind(&playlistName); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rm %s", playlistName.PlaylistName))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In removePlaylist, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"removePlaylist": "ok"})
+	} else {
+		log.Warningf("Unable to remove playlist \"%v\": %s\n", playlistName.PlaylistName, err)
+	}
+}
+
+func (e *com) savePlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var playlistName playlistNameForm
+
+	if err := c.ShouldBind(&playlistName); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("save %s", playlistName.PlaylistName))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In savePlaylist, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"savePlaylist": "ok"})
+	} else {
+		log.Warningf("Unable to save playlist \"%v\": %s\n", playlistName.PlaylistName, err)
+	}
+}
+
 func (e *com) setVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	var vol volumeForm
@@ -819,6 +878,8 @@ func initGin(com *com) {
 		v1.GET("/playSong/:pos", com.getPlaySongWithID)
 		v1.GET("/previousSong", com.getPreviousSong)
 		v1.GET("/nextSong", com.getNextSong)
+		v1.POST("removePlaylist", com.removePlaylist)
+		v1.POST("/savePlaylist", com.savePlaylist)
 		v1.POST("/setVolume", com.setVolume)
 		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)

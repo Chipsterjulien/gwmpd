@@ -3,7 +3,10 @@
     <br>
     <br>
 
-    <button type="button" name="button">New playlist</button>
+    <div class="">
+      <input type="text" placeholder="The new playlist's name" v-model="newPlaylist" @keyup.enter="addNewPlaylist">
+      <button type="button" @click="addNewPlaylist">Add new playlist</button>
+    </div>
     <table>
       <tr>
         <th>#</th>
@@ -14,7 +17,7 @@
         <td>{{ name }}</td>
         <td><button type="button" @click="clearAndLoadPlaylist(name)">Replace the playlist</button></td>
         <td><button type="button" @click="loadPlaylist(name)">Append to playlist</button></td>
-        <td><button type="button" @click="loadPlaylist(name)">Remove</button></td>
+        <td><button type="button" @click="removePlaylist(name)">Remove</button></td>
       </tr>
     </table>
   </div>
@@ -26,6 +29,7 @@ export default {
   name: 'PlaylistView',
   data () {
     return {
+      newPlaylist: ''
     }
   },
   computed: {
@@ -38,9 +42,20 @@ export default {
       'setState',
       'setAllPlaylists'
     ]),
+    addNewPlaylist () {
+      this.$resource('v1/savePlaylist').save({playlistName: this.newPlaylist}).then((response) => {
+        this.newPlaylist = ''
+        this.loadAllPlaylists()
+      })
+    },
     clearAndLoadPlaylist (name) {
       this.$resource('v1/clearCurrentPlaylist').get().then((response) => {
         this.loadPlaylist(name)
+      })
+    },
+    loadAllPlaylists () {
+      this.$resource('v1/allPlaylists').get().then((response) => {
+        this.setAllPlaylists(response.data)
       })
     },
     loadPlaylist (name) {
@@ -50,12 +65,15 @@ export default {
           this.songPlayed = true
         })
       })
+    },
+    removePlaylist (name) {
+      this.$resource('v1/removePlaylist').save({playlistName: name}).then((response) => {
+        this.loadAllPlaylists()
+      })
     }
   },
   mounted () {
-    this.$resource('v1/allPlaylists').get().then((response) => {
-      this.setAllPlaylists(response.data)
-    })
+    this.loadAllPlaylists()
   }
 }
 </script>
