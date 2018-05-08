@@ -68,14 +68,18 @@ export default {
       'setState'
     ]),
     lessVolume () {
-      this.$resource('v1/setVolume').save({volume: this.getStatus.volume - 5}).then((response) => {
-        this.setVolume(response.data.volume)
-      })
+      if (this.getStatus.volume >= 5) {
+        this.$resource('v1/setVolume').save({volume: this.getStatus.volume - 5}).then((response) => {
+          this.setVolume(response.data.volume)
+        })
+      }
     },
     moreVolume () {
-      this.$resource('v1/setVolume').save({volume: this.getStatus.volume + 5}).then((response) => {
-        this.setVolume(response.data.volume)
-      })
+      if (this.getStatus.volume <= 95) {
+        this.$resource('v1/setVolume').save({volume: this.getStatus.volume + 5}).then((response) => {
+          this.setVolume(response.data.volume)
+        })
+      }
     },
     toggleMuteVolume () {
       this.$resource('v1/toggleMuteVolume').update().then((response) => {
@@ -135,8 +139,6 @@ export default {
         this.connected = false
       })
     }, 1000)
-  },
-  beforeUpdate () {
   },
   destroy () {
     clearInterval(this.$interval)
