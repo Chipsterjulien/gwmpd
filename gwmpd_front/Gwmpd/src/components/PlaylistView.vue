@@ -14,7 +14,7 @@
       </tr>
       <tr v-for="(name, position) in allPlaylists" :key="position">
         <td>{{ position + 1 }}</td>
-        <td>{{ name }}</td>
+        <td><router-link :to="{ name: 'EditPlaylistView', params: {'playlistName': name } }">{{ name }}</router-link></td>
         <td><button type="button" @click="clearAndLoadPlaylist(name)">Replace the playlist</button></td>
         <td><button type="button" @click="loadPlaylist(name)">Append to playlist</button></td>
         <td><button type="button" @click="removePlaylist(name)">Remove</button></td>

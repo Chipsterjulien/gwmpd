@@ -3,7 +3,8 @@ import Router from 'vue-router'
 import AboutView from '@/components/AboutView'
 import PlaylistView from '@/components/PlaylistView'
 import QueueView from '@/components/QueueView'
-import SideBar from '@/components/SideBar'
+import SideBarView from '@/components/SideBarView'
+import EditPlaylistView from '@/components/EditPlaylistView'
 
 Vue.use(Router)
 
@@ -15,7 +16,7 @@ export default new Router({
       name: 'QueueView',
       components: {
         default: QueueView,
-        SideBar: SideBar
+        SideBar: SideBarView
       }
     }, {
       path: '/playlist',
@@ -28,6 +29,12 @@ export default new Router({
       name: 'AboutView',
       components: {
         default: AboutView
+      }
+    }, {
+      path: '/editPlaylist/:playlistName',
+      name: 'EditPlaylistView',
+      components: {
+        default: EditPlaylistView
       }
     }, {
       path: '*',

@@ -308,6 +308,30 @@ func (e *com) getStopSong(c *gin.Context) {
 	c.JSON(200, gin.H{"stopSong": "ok"})
 }
 
+func (e *com) getPlaylistSongsList(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	name := c.Param("name")
+	fmt.Println(name)
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- append([]byte("listplaylist "), []byte(name)...)
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In getPlaylistSongsList, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{})
+}
+
 func (e *com) getPlaySong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.mutex.Lock()
@@ -874,6 +898,7 @@ func initGin(com *com) {
 		v1.GET("/currentSong", com.getCurrentSong)
 		v1.GET("/loadPlaylist/:name", com.getLoadPlaylist)
 		v1.GET("/pauseSong", com.getPauseSong)
+		v1.GET("/playlistSongsList/:name", com.getPlaylistSongsList)
 		v1.GET("/playSong", com.getPlaySong)
 		v1.GET("/playSong/:pos", com.getPlaySongWithID)
 		v1.GET("/previousSong", com.getPreviousSong)
