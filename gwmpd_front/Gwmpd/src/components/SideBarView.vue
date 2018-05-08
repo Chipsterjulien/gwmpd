@@ -64,7 +64,6 @@ export default {
     },
     toggleSingle () {
       this.$resource('v1/toggleSingle').update().then((response) => {
-        console.log(response.data)
         this.setSingle(response.data.single)
       })
     },

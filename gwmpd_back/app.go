@@ -93,6 +93,12 @@ type playlistNameForm struct {
 	PlaylistName string `form:"playlistName" binding:"required"`
 }
 
+type songForm struct {
+	PlaylistName string `form:"playlistName" json:"playlistName" binding:"required"`
+	OldPos       int    `form:"oldpos" json:"oldpos" binding:"required"`
+	NewPos       int    //`form:"newPos" binding:"required"`
+}
+
 type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
@@ -264,6 +270,37 @@ func (e *com) getPreviousSong(c *gin.Context) {
 	c.JSON(200, gin.H{"previousSong": "ok"})
 }
 
+func (e *com) moveSong(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var song songForm
+
+	if err := c.ShouldBind(&song); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistmove %s %d %d",
+			song.PlaylistName,
+			song.OldPos,
+			song.NewPos,
+		))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In moveSong, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"moveSong": "ok"})
+	} else {
+		log.Warningf("Unable to move song \"%v\" in playlist: %s\n", song.PlaylistName, err)
+	}
+}
+
 func (e *com) getNextSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	e.mutex.Lock()
@@ -307,71 +344,6 @@ func (e *com) getStopSong(c *gin.Context) {
 
 	c.JSON(200, gin.H{"stopSong": "ok"})
 }
-
-// func loadPlaylistInList(cmdToConsumeChan chan []byte, playlist *[]mpdCurrentSong, mutex *sync.Mutex) {
-// 	log := logging.MustGetLogger("log")
-// 	mySong := mpdCurrentSong{}
-//
-// 	for {
-// 		line := <-cmdToConsumeChan
-// 		if bytes.Equal(line, []byte("OK")) {
-// 			mutex.Unlock()
-// 			break
-// 		}
-//
-// 		first, end := splitLine(&line)
-// 		switch first {
-// 		case "Album":
-// 			mySong.Album = end
-// 		case "Artist":
-// 			mySong.Artist = end
-// 		case "Composer":
-// 		case "Date":
-// 			mySong.Date = end
-// 		case "duration":
-// 			f, err := strconv.ParseFloat(end, 64)
-// 			if err != nil {
-// 				log.Warningf("Unable to convert \"duration\" %s", end)
-// 				continue
-// 			}
-// 			mySong.Duration = f
-// 		case "file":
-// 			mySong.File = end
-// 		case "Genre":
-// 			mySong.Genre = end
-// 		case "Id":
-// 			i, err := strconv.Atoi(end)
-// 			if err != nil {
-// 				log.Warningf("Unable to convert \"Id\" %s", end)
-// 				continue
-// 			}
-// 			mySong.Id = i
-// 			*playlist = append(*playlist, mySong)
-// 			mySong = mpdCurrentSong{}
-// 		case "Last-Modified":
-// 			mySong.LastModified = end
-// 		case "Pos":
-// 			i, err := strconv.Atoi(end)
-// 			if err != nil {
-// 				log.Warningf("Unable to convert \"Pos\" %s", end)
-// 				continue
-// 			}
-// 			mySong.Pos = i
-// 		case "Time":
-// 			i, err := strconv.Atoi(end)
-// 			if err != nil {
-// 				log.Warningf("Unable to convert \"volume\" %s", end)
-// 				continue
-// 			}
-// 			mySong.Time = i
-// 		case "Title":
-// 			mySong.Title = end
-// 		case "Track":
-// 		default:
-// 			log.Infof("In getCurrentPlaylist, unknown: \"%s\"\n", first)
-// 		}
-// 	}
-// }
 
 func (e *com) getPlaylistSongsList(c *gin.Context) {
 	log := logging.MustGetLogger("log")
@@ -726,8 +698,6 @@ func (e *com) removePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		// append([]byte("load "), []byte(name)...)
-		// e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rm %s", playlistName.PlaylistName))
 		e.sendCmdToMPDChan <- append([]byte("rm "), []byte(playlistName.PlaylistName)...)
 		for {
 			line := <-e.cmdToConsumeChan
@@ -1027,6 +997,7 @@ func initGin(com *com) {
 		v1.GET("/playSong", com.getPlaySong)
 		v1.GET("/playSong/:pos", com.getPlaySongWithID)
 		v1.GET("/previousSong", com.getPreviousSong)
+		v1.POST("moveSong", com.moveSong)
 		v1.GET("/nextSong", com.getNextSong)
 		v1.POST("removePlaylist", com.removePlaylist)
 		v1.POST("/savePlaylist", com.savePlaylist)
