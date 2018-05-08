@@ -6,7 +6,7 @@
     <input type="checkbox" :checked="status.repeat" @change="toggleRepeat">Repeat<br>
     <input type="checkbox" :checked="status.single" @change="toggleSingle">Single<br>
     <br>
-    <button type="button">Shuffle</button><br>
+    <button type="button" @click="shuffle">Shuffle</button><br>
     <button type="button" @click="updateDB">Update DB</button><br>
     <button type="button" @click="clearQueue">Clear queue</button>
   </div>
@@ -38,6 +38,13 @@ export default {
     clearQueue () {
       this.$resource('v1/clearCurrentPlaylist').get().then((response) => {
         this.setPlaylist({})
+      })
+    },
+    shuffle () {
+      this.$resource('v1/shuffle').get().then((response) => {
+        this.$resource('v1/currentPlaylist').get().then((response) => {
+          this.setPlaylist(response.data)
+        })
       })
     },
     toggleConsume () {

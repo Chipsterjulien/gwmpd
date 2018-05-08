@@ -806,6 +806,28 @@ func (e *com) setVolume(c *gin.Context) {
 	}
 }
 
+func (e *com) shuffle(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte("shuffle")
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In shuffle, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"shuffle": "ok"})
+}
+
 func (e *com) toggleConsume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -1009,6 +1031,7 @@ func initGin(com *com) {
 		v1.POST("removePlaylist", com.removePlaylist)
 		v1.POST("/savePlaylist", com.savePlaylist)
 		v1.POST("/setVolume", com.setVolume)
+		v1.GET("/shuffle", com.shuffle)
 		v1.GET("/statusMPD", com.getStatusMPD)
 		v1.GET("/stopSong", com.getStopSong)
 		v1.PUT("/toggleConsume", com.toggleConsume)

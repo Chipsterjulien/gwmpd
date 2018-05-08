@@ -16,7 +16,7 @@
           <th>Title</th>
           <th>Duration</th>
         </tr>
-        <tr v-for="(k,v) in currentPlaylist" :key="v">
+        <tr v-for="(k, v) in currentPlaylist" :key="v">
           <td>{{ k.Pos + 1 }}</td>
           <td>{{ k.Title }}</td>
           <td>{{ k.Time }}</td>
