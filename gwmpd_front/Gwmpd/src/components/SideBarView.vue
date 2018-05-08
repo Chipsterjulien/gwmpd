@@ -6,6 +6,7 @@
     <input type="checkbox" :checked="status.repeat" @change="toggleRepeat">Repeat<br>
     <input type="checkbox" :checked="status.single" @change="toggleSingle">Single<br>
     <br>
+    <button type="button">Shuffle</button><br>
     <button type="button" @click="updateDB">Update DB</button><br>
     <button type="button" @click="clearQueue">Clear queue</button>
   </div>
