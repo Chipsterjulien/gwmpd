@@ -308,12 +308,79 @@ func (e *com) getStopSong(c *gin.Context) {
 	c.JSON(200, gin.H{"stopSong": "ok"})
 }
 
+// func loadPlaylistInList(cmdToConsumeChan chan []byte, playlist *[]mpdCurrentSong, mutex *sync.Mutex) {
+// 	log := logging.MustGetLogger("log")
+// 	mySong := mpdCurrentSong{}
+//
+// 	for {
+// 		line := <-cmdToConsumeChan
+// 		if bytes.Equal(line, []byte("OK")) {
+// 			mutex.Unlock()
+// 			break
+// 		}
+//
+// 		first, end := splitLine(&line)
+// 		switch first {
+// 		case "Album":
+// 			mySong.Album = end
+// 		case "Artist":
+// 			mySong.Artist = end
+// 		case "Composer":
+// 		case "Date":
+// 			mySong.Date = end
+// 		case "duration":
+// 			f, err := strconv.ParseFloat(end, 64)
+// 			if err != nil {
+// 				log.Warningf("Unable to convert \"duration\" %s", end)
+// 				continue
+// 			}
+// 			mySong.Duration = f
+// 		case "file":
+// 			mySong.File = end
+// 		case "Genre":
+// 			mySong.Genre = end
+// 		case "Id":
+// 			i, err := strconv.Atoi(end)
+// 			if err != nil {
+// 				log.Warningf("Unable to convert \"Id\" %s", end)
+// 				continue
+// 			}
+// 			mySong.Id = i
+// 			*playlist = append(*playlist, mySong)
+// 			mySong = mpdCurrentSong{}
+// 		case "Last-Modified":
+// 			mySong.LastModified = end
+// 		case "Pos":
+// 			i, err := strconv.Atoi(end)
+// 			if err != nil {
+// 				log.Warningf("Unable to convert \"Pos\" %s", end)
+// 				continue
+// 			}
+// 			mySong.Pos = i
+// 		case "Time":
+// 			i, err := strconv.Atoi(end)
+// 			if err != nil {
+// 				log.Warningf("Unable to convert \"volume\" %s", end)
+// 				continue
+// 			}
+// 			mySong.Time = i
+// 		case "Title":
+// 			mySong.Title = end
+// 		case "Track":
+// 		default:
+// 			log.Infof("In getCurrentPlaylist, unknown: \"%s\"\n", first)
+// 		}
+// 	}
+// }
+
 func (e *com) getPlaylistSongsList(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	name := c.Param("name")
-	fmt.Println(name)
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- append([]byte("listplaylist "), []byte(name)...)
+	e.sendCmdToMPDChan <- append([]byte("listplaylistinfo "), []byte(name)...)
+
+	playlist := []mpdCurrentSong{}
+	mySong := mpdCurrentSong{}
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -322,14 +389,46 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 			break
 		}
 
-		first, _ := splitLine(&line)
+		first, end := splitLine(&line)
 		switch first {
+		case "Album":
+			mySong.Album = end
+		case "Artist":
+			mySong.Artist = end
+		case "Composer":
+		case "Date":
+			mySong.Date = end
+		case "duration":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"duration\" %s", end)
+				continue
+			}
+			mySong.Duration = f
+			playlist = append(playlist, mySong)
+			mySong = mpdCurrentSong{}
+		case "file":
+			mySong.File = end
+		case "Genre":
+			mySong.Genre = end
+		case "Last-Modified":
+			mySong.LastModified = end
+		case "Time":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"volume\" %s", end)
+				continue
+			}
+			mySong.Time = i
+		case "Title":
+			mySong.Title = end
+		case "Track":
 		default:
 			log.Infof("In getPlaylistSongsList, unknown: \"%s\"\n", first)
 		}
 	}
 
-	c.JSON(200, gin.H{})
+	c.JSON(200, playlist)
 }
 
 func (e *com) getPlaySong(c *gin.Context) {
@@ -627,7 +726,9 @@ func (e *com) removePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rm %s", playlistName.PlaylistName))
+		// append([]byte("load "), []byte(name)...)
+		// e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rm %s", playlistName.PlaylistName))
+		e.sendCmdToMPDChan <- append([]byte("rm "), []byte(playlistName.PlaylistName)...)
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
@@ -654,7 +755,9 @@ func (e *com) savePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("save %s", playlistName.PlaylistName))
+		// append([]byte("load "), []byte(name)...)
+		// e.sendCmdToMPDChan <- []byte(fmt.Sprintf("save %s", playlistName.PlaylistName))
+		e.sendCmdToMPDChan <- append([]byte("save "), []byte(playlistName.PlaylistName)...)
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {

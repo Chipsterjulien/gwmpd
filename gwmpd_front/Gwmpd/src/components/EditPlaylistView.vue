@@ -2,16 +2,22 @@
   <div class="">
     <br>
     <br>
-    Edit playlist View
-    <br>
-    <table>
+    <button type="button">Clear</button>
+    <table v-if="playlist.length">
       <tr>
         <th>#</th>
         <th>Song's name</th>
         <th>Duration</th>
       </tr>
-      <tr>
-        <td></td>
+      <tr v-for="(k, v) in playlist" :key="v">
+        <td>{{ v + 1 }}</td>
+        <td>{{ k.Title }}</td>
+        <td>{{ k.Time }}</td>
+        <td><button type="button">Top</button></td>
+        <td><button type="button">Up</button></td>
+        <td><button type="button">Down</button></td>
+        <td><button type="button">Bottom</button></td>
+        <td><button type="button">Remove</button></td>
       </tr>
     </table>
   </div>
@@ -22,6 +28,8 @@ export default {
   name: 'EditPlaylistView',
   data () {
     return {
+      playlist: [],
+      playlistName: ''
     }
   },
   computed: {
@@ -29,10 +37,11 @@ export default {
   methods: {
   },
   mounted () {
-    // console.log(this.$route.params.playlistName)
-    this.$resource('v1/playlistSongsList{/playlistName}').get({playlistName: this.$route.params.playlistName}).then((response) => {
+    this.playlistName = this.$route.params.playlistName
+    this.$resource('v1/playlistSongsList{/playlistName}').get({playlistName: this.playlistName}).then((response) => {
+      this.playlist = response.data
+      console.log(this.playlist)
     })
-    // console.log(this.$route.params)
   }
 }
 </script>
