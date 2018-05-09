@@ -41,19 +41,17 @@ export default {
       })
     },
     moveBottom (actualPos) {
-      console.log(actualPos)
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldpos: actualPos, newpos: this.playlist.length - 1}).then((response) => {
+      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldPos: actualPos, newPos: this.playlist.length - 1}).then((response) => {
         this.getPlaylist()
       })
     },
     moveTop (actualPos) {
-      console.log(actualPos)
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldpos: actualPos, newpos: 0}).then((response) => {
+      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldPos: actualPos, newPos: 0}).then((response) => {
         this.getPlaylist()
       })
     },
     moveDown (actualPos) {
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldpos: actualPos, newpos: actualPos + 1}).then((response) => {
+      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldPos: actualPos, newPos: actualPos + 1}).then((response) => {
         this.getPlaylist()
       })
     },

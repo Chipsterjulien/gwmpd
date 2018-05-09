@@ -95,8 +95,8 @@ type playlistNameForm struct {
 
 type songForm struct {
 	PlaylistName string `form:"playlistName" json:"playlistName" binding:"required"`
-	OldPos       int    `form:"oldpos" json:"oldpos" binding:"required"`
-	NewPos       int    //`form:"newPos" binding:"required"`
+	OldPos       int    `form:"oldPos" json:"oldPos" binding:"exists"`
+	NewPos       int    `form:"newPos" binding:"exists"`
 }
 
 type volumeForm struct {
