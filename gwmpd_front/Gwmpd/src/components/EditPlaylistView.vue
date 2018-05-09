@@ -2,7 +2,11 @@
   <div class="">
     <br>
     <br>
-    <button type="button">Clear</button>
+    Nom: {{ playlistName }}
+    <br>
+    <button type="button" @click="clearPlaylist">Clear</button><br>
+    <input type="text" v-model="newPlaylistName">
+    <button type="button" @click="renamePlaylist">Rename</button>
     <table v-if="playlist.length">
       <tr>
         <th>#</th>
@@ -29,12 +33,18 @@ export default {
   data () {
     return {
       playlist: [],
-      playlistName: ''
+      playlistName: '',
+      newPlaylistName: ''
     }
   },
   computed: {
   },
   methods: {
+    clearPlaylist () {
+      this.$resource('v1/clearPlaylist').save({playlistName: this.playlistName}).then((response) => {
+        this.playlist = {}
+      })
+    },
     getPlaylist () {
       this.$resource('v1/playlistSongsList{/playlistName}').get({playlistName: this.playlistName}).then((response) => {
         this.playlist = response.data
@@ -60,11 +70,21 @@ export default {
         this.getPlaylist()
       })
     },
-    removeSong () {
+    removeSong (actualPos) {
+      this.$resource('v1/removeSong').save({playlistName: this.playlistName, pos: actualPos}).then((response) => {
+        this.getPlaylist()
+      })
+    },
+    renamePlaylist () {
+      this.$resource('v1/renamePlaylist').save({oldName: this.playlistName, newName: this.newPlaylistName}).then((response) => {
+        this.playlistName = response.data.newName
+        this.newPlaylistName = this.playlistName
+      })
     }
   },
   mounted () {
     this.playlistName = this.$route.params.playlistName
+    this.newPlaylistName = this.playlistName
     this.getPlaylist()
   }
 }

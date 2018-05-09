@@ -93,6 +93,16 @@ type playlistNameForm struct {
 	PlaylistName string `form:"playlistName" binding:"required"`
 }
 
+type removeSongForm struct {
+	PlaylistName string `form:"playlistName" json:"playlistName" binding:"required"`
+	Pos          int    `form:"pos" json:"pos" binding:"exists"`
+}
+
+type renamePlaylistForm struct {
+	OldName string `form:"oldName" json:"oldName" binding:"required"`
+	NewName string `form:"newName" json:"newName" binding:"required"`
+}
+
 type songForm struct {
 	PlaylistName string `form:"playlistName" json:"playlistName" binding:"required"`
 	OldPos       int    `form:"oldPos" json:"oldPos" binding:"exists"`
@@ -127,6 +137,33 @@ func (e *com) getAllPlaylists(c *gin.Context) {
 	}
 
 	c.JSON(200, playlists)
+}
+
+func (e *com) clearPlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var playlist playlistNameForm
+
+	if err := c.ShouldBind(&playlist); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- append([]byte("playlistclear "), []byte(playlist.PlaylistName)...)
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"clearPlaylist": "ok"})
+	} else {
+		log.Warningf("Unable to clear playlist \"%v\": %s\n", playlist.PlaylistName, err)
+	}
 }
 
 func (e *com) getClearCurrentPlaylist(c *gin.Context) {
@@ -268,37 +305,6 @@ func (e *com) getPreviousSong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"previousSong": "ok"})
-}
-
-func (e *com) moveSong(c *gin.Context) {
-	log := logging.MustGetLogger("log")
-	var song songForm
-
-	if err := c.ShouldBind(&song); err == nil {
-		e.mutex.Lock()
-		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistmove %s %d %d",
-			song.PlaylistName,
-			song.OldPos,
-			song.NewPos,
-		))
-		for {
-			line := <-e.cmdToConsumeChan
-			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
-				break
-			}
-
-			first, _ := splitLine(&line)
-			switch first {
-			default:
-				log.Infof("In moveSong, unknown: \"%s\"\n", first)
-			}
-		}
-
-		c.JSON(200, gin.H{"moveSong": "ok"})
-	} else {
-		log.Warningf("Unable to move song \"%v\" in playlist: %s\n", song.PlaylistName, err)
-	}
 }
 
 func (e *com) getNextSong(c *gin.Context) {
@@ -692,6 +698,37 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	})
 }
 
+func (e *com) moveSong(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var song songForm
+
+	if err := c.ShouldBind(&song); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistmove %s %d %d",
+			song.PlaylistName,
+			song.OldPos,
+			song.NewPos,
+		))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In moveSong, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"moveSong": "ok"})
+	} else {
+		log.Warningf("Unable to move song \"%v\" in playlist: %s\n", song.PlaylistName, err)
+	}
+}
+
 func (e *com) removePlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 	var playlistName playlistNameForm
@@ -716,6 +753,60 @@ func (e *com) removePlaylist(c *gin.Context) {
 		c.JSON(200, gin.H{"removePlaylist": "ok"})
 	} else {
 		log.Warningf("Unable to remove playlist \"%v\": %s\n", playlistName.PlaylistName, err)
+	}
+}
+
+func (e *com) removeSong(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var song removeSongForm
+
+	if err := c.ShouldBind(&song); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistdelete %s %d", song.PlaylistName, song.Pos))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In removeSong, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"removeSong": "ok"})
+	} else {
+		log.Warningf("Unable to remove song in \"%v\" at \"%d\": %s\n", song.PlaylistName, song.Pos, err)
+	}
+}
+
+func (e *com) renamePlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+	var name renamePlaylistForm
+
+	if err := c.ShouldBind(&name); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rename %s %s", name.OldName, name.NewName))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In renamePlaylist, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"renamePlaylist": "ok", "newName": name.NewName})
+	} else {
+		log.Warningf("Unable to rename playlist \"%ss\" to \"%s\": %s\n", name.OldName, name.NewName, err)
 	}
 }
 
@@ -988,6 +1079,7 @@ func initGin(com *com) {
 	v1 := g.Group("/v1")
 	{
 		v1.GET("/allPlaylists", com.getAllPlaylists)
+		v1.POST("/clearPlaylist", com.clearPlaylist)
 		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
 		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
 		v1.GET("/currentSong", com.getCurrentSong)
@@ -999,7 +1091,9 @@ func initGin(com *com) {
 		v1.GET("/previousSong", com.getPreviousSong)
 		v1.POST("moveSong", com.moveSong)
 		v1.GET("/nextSong", com.getNextSong)
-		v1.POST("removePlaylist", com.removePlaylist)
+		v1.POST("/removePlaylist", com.removePlaylist)
+		v1.POST("/removeSong", com.removeSong)
+		v1.POST("/renamePlaylist", com.renamePlaylist)
 		v1.POST("/savePlaylist", com.savePlaylist)
 		v1.POST("/setVolume", com.setVolume)
 		v1.GET("/shuffle", com.shuffle)
