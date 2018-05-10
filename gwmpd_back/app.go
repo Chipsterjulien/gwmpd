@@ -89,6 +89,10 @@ type mpdStat struct {
 	Uptime     string
 }
 
+type locationForm struct {
+	Location string `form:"location" binding:"required"`
+}
+
 type playlistNameForm struct {
 	PlaylistName string `form:"playlistName" binding:"required"`
 }
@@ -260,6 +264,77 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		"Title":         e.info.currentSong.Title,
 		"Time":          e.info.currentSong.Time,
 	})
+}
+
+// file: Toy-Box_-_Eenie_Meenie_Miney_Mo_(1999).mp3
+// Last-Modified: 2015-11-26T13:17:22Z
+// Time: 198
+// duration: 198.217
+// file: Skyfall - Adele.mp3
+// Last-Modified: 2014-09-03T13:04:02Z
+// Time: 289
+// duration: 289.336
+// Artist: Adele
+// Title: Skyfall - Adele
+// Track: 4294967295
+// Date: -1
+// file: Krewella-Alive.mp3
+// Last-Modified: 2013-10-13T12:48:19Z
+// Time: 207
+// duration: 206.544
+// Title: Krewella - Alive
+// Track: 1
+// file: Indochine - L'aventurier.mp3
+// Last-Modified: 2013-06-30T18:26:05Z
+// Time: 231
+// duration: 231.053
+// Artist: Indochine
+// Title: L'aventurier
+// Album: 800 chansons des années 80
+// Date: 1982
+
+func (e *com) getFilesList(c *gin.Context) {
+	// listfiles pour lister le répertoire + les fichiers
+	// lsinfo pour avoir les info sur le fichier
+
+	log := logging.MustGetLogger("log")
+	location := c.Param("location")
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("listfiles \"%s\"", location[1:]))
+
+	directories := []string{}
+	songs := []mpdCurrentSong{}
+
+	mySong := mpdCurrentSong{}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			os.Exit(0)
+			break
+		}
+
+		first, end := splitLine(&line)
+		switch first {
+		case "directory":
+			directories = append(directories, end)
+		case "file":
+			mySong.File = end
+			songs = append(songs, mySong)
+			mySong.File = ""
+		case "Last-Modified":
+		case "size":
+		default:
+			log.Infof("In getFilesList, unknown: \"%s\"\n", first)
+		}
+	}
+
+	fmt.Println(len(directories))
+	fmt.Println(len(songs))
+	os.Exit(0)
+
+	c.JSON(200, gin.H{})
 }
 
 func (e *com) getLoadPlaylist(c *gin.Context) {
@@ -1083,6 +1158,8 @@ func initGin(com *com) {
 		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
 		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
 		v1.GET("/currentSong", com.getCurrentSong)
+		// v1.GET("/filesList", com.getFilesList)
+		v1.GET("/filesList/*location", com.getFilesList)
 		v1.GET("/loadPlaylist/:name", com.getLoadPlaylist)
 		v1.GET("/pauseSong", com.getPauseSong)
 		v1.GET("/playlistSongsList/:name", com.getPlaylistSongsList)

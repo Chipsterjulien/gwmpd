@@ -7,23 +7,29 @@
     <button type="button" @click="clearPlaylist">Clear</button><br>
     <input type="text" v-model="newPlaylistName">
     <button type="button" @click="renamePlaylist">Rename</button>
-    <table v-if="playlist.length">
-      <tr>
-        <th>#</th>
-        <th>Song's name</th>
-        <th>Duration</th>
-      </tr>
-      <tr v-for="(k, v) in playlist" :key="v">
-        <td>{{ v + 1 }}</td>
-        <td>{{ k.Title }}</td>
-        <td>{{ k.Time }}</td>
-        <td><button type="button" v-if="v !== 0" @click="moveTop(v)">Top</button></td>
-        <td><button type="button" v-if="v < playlist.length - 1" @click="moveBottom(v)">Bottom</button></td>
-        <td><button type="button" v-if="v !== 0" @click="moveUp(v)">Up</button></td>
-        <td><button type="button" v-if="v < playlist.length - 1" @click="moveDown(v)">Down</button></td>
-        <td><button type="button" @click="removeSong(v)">Remove</button></td>
-      </tr>
-    </table>
+    <div class="">
+      <table v-if="playlist.length">
+        <tr>
+          <th>#</th>
+          <th>Song's name</th>
+          <th>Duration</th>
+        </tr>
+        <tr v-for="(k, v) in playlist" :key="v">
+          <td>{{ v + 1 }}</td>
+          <td>{{ k.Title }}</td>
+          <td>{{ k.Time }}</td>
+          <td><button type="button" v-if="v !== 0" @click="moveTop(v)">Top</button></td>
+          <td><button type="button" v-if="v < playlist.length - 1" @click="moveBottom(v)">Bottom</button></td>
+          <td><button type="button" v-if="v !== 0" @click="moveUp(v)">Up</button></td>
+          <td><button type="button" v-if="v < playlist.length - 1" @click="moveDown(v)">Down</button></td>
+          <td><button type="button" @click="removeSong(v)">Remove</button></td>
+        </tr>
+      </table>
+    </div>
+    <div class="">
+      <br>
+      Location: {{ location }}
+    </div>
   </div>
 </template>
 
@@ -32,9 +38,10 @@ export default {
   name: 'EditPlaylistView',
   data () {
     return {
+      location: '',
+      newPlaylistName: '',
       playlist: [],
-      playlistName: '',
-      newPlaylistName: ''
+      playlistName: ''
     }
   },
   computed: {
@@ -43,6 +50,11 @@ export default {
     clearPlaylist () {
       this.$resource('v1/clearPlaylist').save({playlistName: this.playlistName}).then((response) => {
         this.playlist = {}
+      })
+    },
+    getFilesList () {
+      this.$resource('v1/filesList{/location}').get({location: this.location}).then((response) => {
+        console.log(response.data)
       })
     },
     getPlaylist () {
@@ -86,6 +98,7 @@ export default {
     this.playlistName = this.$route.params.playlistName
     this.newPlaylistName = this.playlistName
     this.getPlaylist()
+    this.getFilesList()
   }
 }
 </script>
