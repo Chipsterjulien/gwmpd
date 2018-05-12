@@ -27,8 +27,36 @@
       </table>
     </div>
     <div class="">
-      <br>
-      Location: {{ location }}
+      <div class="">
+        <br>
+        Location: {{ location }}
+      </div>
+      <div class="">
+        <table v-if="Object.keys(available).length">
+          <tr>
+            <th>Directory's name</th>
+          </tr>
+          <tr v-for="(k, v) in available.directories" :key="v">
+            <td @click="checkFilesList(k)">{{ k }}</td>
+          </tr>
+        </table>
+      </div>
+      <div class="">
+        <table>
+          <tr>
+            <th>File's name</th>
+            <th>Artist</th>
+            <th>Album</th>
+            <th>Duration</th>
+          </tr>
+          <tr v-for="(k, v) in available.songs" :key="v">
+            <td>{{ k.File }}</td>
+            <td>{{ k.Artist }}</td>
+            <td>{{ k.Album }}</td>
+            <td>{{ k.Time }}</td>
+          </tr>
+        </table>
+      </div>
     </div>
   </div>
 </template>
@@ -38,6 +66,7 @@ export default {
   name: 'EditPlaylistView',
   data () {
     return {
+      available: {},
       location: '',
       newPlaylistName: '',
       playlist: [],
@@ -47,6 +76,14 @@ export default {
   computed: {
   },
   methods: {
+    checkFilesList (loc) {
+      if (this.location === '') {
+        this.location = loc
+      } else {
+        this.location += '/' + loc
+      }
+      this.getFilesList()
+    },
     clearPlaylist () {
       this.$resource('v1/clearPlaylist').save({playlistName: this.playlistName}).then((response) => {
         this.playlist = {}
@@ -54,7 +91,7 @@ export default {
     },
     getFilesList () {
       this.$resource('v1/filesList{/location}').get({location: this.location}).then((response) => {
-        console.log(response.data)
+        this.available = response.data
       })
     },
     getPlaylist () {

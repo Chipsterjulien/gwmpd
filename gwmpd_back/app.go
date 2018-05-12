@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/textproto"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -119,6 +120,7 @@ type volumeForm struct {
 
 func (e *com) getAllPlaylists(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("listplaylists")
 	playlists := []string{}
@@ -126,7 +128,6 @@ func (e *com) getAllPlaylists(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -141,19 +142,20 @@ func (e *com) getAllPlaylists(c *gin.Context) {
 	}
 
 	c.JSON(200, playlists)
+	e.mutex.Unlock()
 }
 
 func (e *com) clearPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var playlist playlistNameForm
 
 	if err := c.ShouldBind(&playlist); err == nil {
-		e.mutex.Lock()
 		e.sendCmdToMPDChan <- append([]byte("playlistclear "), []byte(playlist.PlaylistName)...)
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -168,17 +170,18 @@ func (e *com) clearPlaylist(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to clear playlist \"%v\": %s\n", playlist.PlaylistName, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("clear")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -190,10 +193,13 @@ func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"clearCurrentPlaylist": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getCurrentSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("currentsong")
 
 	for {
@@ -264,43 +270,18 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		"Title":         e.info.currentSong.Title,
 		"Time":          e.info.currentSong.Time,
 	})
+	e.mutex.Unlock()
 }
 
-// file: Toy-Box_-_Eenie_Meenie_Miney_Mo_(1999).mp3
-// Last-Modified: 2015-11-26T13:17:22Z
-// Time: 198
-// duration: 198.217
-// file: Skyfall - Adele.mp3
-// Last-Modified: 2014-09-03T13:04:02Z
-// Time: 289
-// duration: 289.336
-// Artist: Adele
-// Title: Skyfall - Adele
-// Track: 4294967295
-// Date: -1
-// file: Krewella-Alive.mp3
-// Last-Modified: 2013-10-13T12:48:19Z
-// Time: 207
-// duration: 206.544
-// Title: Krewella - Alive
-// Track: 1
-// file: Indochine - L'aventurier.mp3
-// Last-Modified: 2013-06-30T18:26:05Z
-// Time: 231
-// duration: 231.053
-// Artist: Indochine
-// Title: L'aventurier
-// Album: 800 chansons des années 80
-// Date: 1982
-
 func (e *com) getFilesList(c *gin.Context) {
-	// listfiles pour lister le répertoire + les fichiers
-	// lsinfo pour avoir les info sur le fichier
-
 	log := logging.MustGetLogger("log")
-	location := c.Param("location")
+
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("listfiles \"%s\"", location[1:]))
+	location := c.Param("location")
+	if len(location) > 0 {
+		location = location[1:]
+	}
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("listfiles \"%s\"", location))
 
 	directories := []string{}
 	songs := []mpdCurrentSong{}
@@ -310,8 +291,7 @@ func (e *com) getFilesList(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
-			os.Exit(0)
+			// e.mutex.Unlock()
 			break
 		}
 
@@ -330,23 +310,76 @@ func (e *com) getFilesList(c *gin.Context) {
 		}
 	}
 
-	fmt.Println(len(directories))
-	fmt.Println(len(songs))
-	os.Exit(0)
+	for pos, song := range songs {
+		// e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("lsinfo \"%s\"", path.Join(location, song.File)))
+		getSongInfos(e, &songs[pos])
+		// e.mutex.Unlock()
+	}
 
-	c.JSON(200, gin.H{})
+	infos := make(map[string]interface{})
+	infos["directories"] = directories
+	infos["songs"] = songs
+	// os.Exit(0)
+
+	c.JSON(200, infos)
+	e.mutex.Unlock()
+}
+
+func getSongInfos(e *com, song *mpdCurrentSong) {
+	log := logging.MustGetLogger("log")
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			// e.mutex.Unlock()
+			break
+		}
+
+		first, end := splitLine(&line)
+		switch first {
+		case "Album":
+			(*song).Album = end
+		case "Artist":
+			(*song).Artist = end
+		case "Composer":
+		case "Date":
+		case "duration":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"duration\" %s", end)
+				continue
+			}
+			(*song).Duration = f
+		case "file":
+		case "Genre":
+		case "Last-Modified":
+		case "Title":
+			(*song).Title = end
+		case "Time":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"volume\" %s", end)
+				continue
+			}
+			(*song).Time = i
+		case "Track":
+		default:
+			log.Infof("In getSongInfos, unknown: \"%s\"\n", first)
+		}
+	}
 }
 
 func (e *com) getLoadPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	name := c.Param("name")
+
 	e.mutex.Lock()
+	name := c.Param("name")
 	e.sendCmdToMPDChan <- append([]byte("load "), []byte(name)...)
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -358,17 +391,18 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"loadPlaylist": name})
+	e.mutex.Unlock()
 }
 
 func (e *com) getPreviousSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("previous")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -380,17 +414,18 @@ func (e *com) getPreviousSong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"previousSong": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getNextSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("next")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -402,17 +437,18 @@ func (e *com) getNextSong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"nextSong": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getStopSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("stop")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -424,12 +460,14 @@ func (e *com) getStopSong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"stopSong": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getPlaylistSongsList(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	name := c.Param("name")
+
 	e.mutex.Lock()
+	name := c.Param("name")
 	e.sendCmdToMPDChan <- append([]byte("listplaylistinfo "), []byte(name)...)
 
 	playlist := []mpdCurrentSong{}
@@ -438,7 +476,6 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -482,17 +519,18 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 	}
 
 	c.JSON(200, playlist)
+	e.mutex.Unlock()
 }
 
 func (e *com) getPlaySong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("play")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -504,18 +542,19 @@ func (e *com) getPlaySong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"playSong": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getPlaySongWithID(c *gin.Context) {
 	log := logging.MustGetLogger("log")
-	pos := c.Param("pos")
+
 	e.mutex.Lock()
+	pos := c.Param("pos")
 	e.sendCmdToMPDChan <- append([]byte("play "), []byte(pos)...)
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -527,17 +566,18 @@ func (e *com) getPlaySongWithID(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"playSong": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getPauseSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("pause")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -549,10 +589,12 @@ func (e *com) getPauseSong(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"pauseSong": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) getCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("playlistinfo")
 	e.info.currentPlaylist = []mpdCurrentSong{}
@@ -561,7 +603,6 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -619,10 +660,12 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 	}
 
 	c.JSON(200, e.info.currentPlaylist)
+	e.mutex.Unlock()
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("status")
 	errorIsNotDefine := true
@@ -630,7 +673,6 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -771,14 +813,16 @@ func (e *com) getStatusMPD(c *gin.Context) {
 		"state":          e.info.status.State,
 		"volume":         e.info.status.Volume,
 	})
+	e.mutex.Unlock()
 }
 
 func (e *com) moveSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var song songForm
 
 	if err := c.ShouldBind(&song); err == nil {
-		e.mutex.Lock()
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistmove %s %d %d",
 			song.PlaylistName,
 			song.OldPos,
@@ -787,7 +831,6 @@ func (e *com) moveSong(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -802,19 +845,20 @@ func (e *com) moveSong(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to move song \"%v\" in playlist: %s\n", song.PlaylistName, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) removePlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var playlistName playlistNameForm
 
 	if err := c.ShouldBind(&playlistName); err == nil {
-		e.mutex.Lock()
 		e.sendCmdToMPDChan <- append([]byte("rm "), []byte(playlistName.PlaylistName)...)
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -829,19 +873,20 @@ func (e *com) removePlaylist(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to remove playlist \"%v\": %s\n", playlistName.PlaylistName, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) removeSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var song removeSongForm
 
 	if err := c.ShouldBind(&song); err == nil {
-		e.mutex.Lock()
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistdelete %s %d", song.PlaylistName, song.Pos))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -856,19 +901,20 @@ func (e *com) removeSong(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to remove song in \"%v\" at \"%d\": %s\n", song.PlaylistName, song.Pos, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) renamePlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var name renamePlaylistForm
 
 	if err := c.ShouldBind(&name); err == nil {
-		e.mutex.Lock()
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rename %s %s", name.OldName, name.NewName))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -883,21 +929,22 @@ func (e *com) renamePlaylist(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to rename playlist \"%ss\" to \"%s\": %s\n", name.OldName, name.NewName, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) savePlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var playlistName playlistNameForm
 
 	if err := c.ShouldBind(&playlistName); err == nil {
-		e.mutex.Lock()
 		// append([]byte("load "), []byte(name)...)
 		// e.sendCmdToMPDChan <- []byte(fmt.Sprintf("save %s", playlistName.PlaylistName))
 		e.sendCmdToMPDChan <- append([]byte("save "), []byte(playlistName.PlaylistName)...)
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -912,20 +959,21 @@ func (e *com) savePlaylist(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to save playlist \"%v\": %s\n", playlistName.PlaylistName, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) setVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
 	var vol volumeForm
 
 	if err := c.ShouldBind(&vol); err == nil {
-		e.mutex.Lock()
 		e.info.status.Volume = vol.Volume
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", vol.Volume))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
-				e.mutex.Unlock()
 				break
 			}
 
@@ -940,17 +988,18 @@ func (e *com) setVolume(c *gin.Context) {
 	} else {
 		log.Warningf("Unable to set volume to \"%v\": %s\n", vol.Volume, err)
 	}
+	e.mutex.Unlock()
 }
 
 func (e *com) shuffle(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("shuffle")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -962,6 +1011,7 @@ func (e *com) shuffle(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"shuffle": "ok"})
+	e.mutex.Unlock()
 }
 
 func (e *com) toggleConsume(c *gin.Context) {
@@ -979,7 +1029,6 @@ func (e *com) toggleConsume(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -991,6 +1040,7 @@ func (e *com) toggleConsume(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"toggleConsume": "ok", "consume": e.info.status.Consume})
+	e.mutex.Unlock()
 }
 
 func (e *com) toggleRandom(c *gin.Context) {
@@ -1008,7 +1058,6 @@ func (e *com) toggleRandom(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -1020,6 +1069,7 @@ func (e *com) toggleRandom(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"toggleRandom": "ok", "random": e.info.status.Random})
+	e.mutex.Unlock()
 }
 
 func (e *com) toggleRepeat(c *gin.Context) {
@@ -1037,7 +1087,6 @@ func (e *com) toggleRepeat(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -1049,6 +1098,7 @@ func (e *com) toggleRepeat(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"toggleRepeat": "ok", "repeat": e.info.status.Repeat})
+	e.mutex.Unlock()
 }
 
 func (e *com) toggleSingle(c *gin.Context) {
@@ -1066,7 +1116,6 @@ func (e *com) toggleSingle(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -1078,11 +1127,13 @@ func (e *com) toggleSingle(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"toggleSingle": "ok", "single": e.info.status.Single})
+	e.mutex.Unlock()
 }
 
 func (e *com) toggleMuteVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
+	e.mutex.Lock()
 	if e.info.status.Volume == 0 {
 		e.info.status.Volume = e.info.status.VolumeSav
 		e.info.status.VolumeSav = 0
@@ -1090,13 +1141,11 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		e.info.status.VolumeSav = e.info.status.Volume
 		e.info.status.Volume = 0
 	}
-	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("setvol %d", e.info.status.Volume))
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -1108,17 +1157,18 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.Volume})
+	e.mutex.Unlock()
 }
 
 func (e *com) updateDB(c *gin.Context) {
 	log := logging.MustGetLogger("log")
+
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("update")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			break
 		}
 
@@ -1131,6 +1181,7 @@ func (e *com) updateDB(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"updateDB": "ok"})
+	e.mutex.Unlock()
 }
 
 func initGin(com *com) {
@@ -1223,9 +1274,9 @@ func splitLine(line *[]byte) (string, string) {
 }
 
 func startApp() {
-	mpdResponseChan := make(chan []byte, 100)
-	sendCmdToMPDChan := make(chan []byte, 100)
-	cmdToConsumeChan := make(chan []byte, 100)
+	mpdResponseChan := make(chan []byte)
+	sendCmdToMPDChan := make(chan []byte)
+	cmdToConsumeChan := make(chan []byte)
 	mutex := &sync.Mutex{}
 
 	com := &com{
