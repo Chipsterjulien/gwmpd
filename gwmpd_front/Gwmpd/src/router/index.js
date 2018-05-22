@@ -5,6 +5,7 @@ import PlaylistView from '@/components/PlaylistView'
 import QueueView from '@/components/QueueView'
 import SideBarView from '@/components/SideBarView'
 import EditPlaylistView from '@/components/EditPlaylistView'
+import LoginView from '@/components/LoginView'
 
 Vue.use(Router)
 
@@ -36,6 +37,10 @@ export default new Router({
       components: {
         default: EditPlaylistView
       }
+    }, {
+      path: '/login',
+      name: 'LoginView',
+      component: LoginView
     }, {
       path: '*',
       redirect: '/'
