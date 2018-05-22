@@ -29,7 +29,7 @@
     <div class="">
       <div class="">
         <br>
-        Location: {{ location }}
+        Location: <span @click="pathDown">{{ location }}</span>
       </div>
       <div class="">
         <table v-if="Object.keys(available).length">
@@ -118,6 +118,13 @@ export default {
       this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldpos: actualPos, newpos: actualPos - 1}).then((response) => {
         this.getPlaylist()
       })
+    },
+    pathDown () {
+      if (location !== '') {
+        let locArray = this.location.split('/')
+        this.location = locArray.slice(0, locArray.length - 1).join('/')
+        this.getFilesList()
+      }
     },
     removeSong (actualPos) {
       this.$resource('v1/removeSong').save({playlistName: this.playlistName, pos: actualPos}).then((response) => {
