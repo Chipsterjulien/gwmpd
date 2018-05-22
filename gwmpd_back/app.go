@@ -1411,7 +1411,7 @@ func eventManagement(com *com) {
 				case "[55@0]":
 				default:
 					log.Criticalf("Unkwnow ACK: %s\n", line)
-					os.Exit(1)
+					// os.Exit(1)
 				}
 			}
 			com.cmdToConsumeChan <- line
