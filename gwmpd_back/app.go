@@ -119,6 +119,34 @@ type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
 
+func (e *com) addSongToPlaylist(c *gin.Context) {
+	// log := logging.MustGetLogger("log")
+	//
+	// var playlist playlistNameForm
+	//
+	// if err := c.ShouldBind(&playlist); err == nil {
+	// 	e.mutex.Lock()
+	// 	e.sendCmdToMPDChan <- append([]byte("playlistclear "), []byte(playlist.PlaylistName)...)
+	// 	for {
+	// 		line := <-e.cmdToConsumeChan
+	// 		if bytes.Equal(line, []byte("OK")) {
+	// 			e.mutex.Unlock()
+	// 			break
+	// 		}
+	//
+	// 		first, _ := splitLine(&line)
+	// 		switch first {
+	// 		default:
+	// 			log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
+	// 		}
+	// 	}
+	//
+	// 	c.JSON(200, gin.H{"clearPlaylist": "ok"})
+	// } else {
+	// 	log.Warningf("Unable to clear playlist \"%v\": %s\n", playlist.PlaylistName, err)
+	// }
+}
+
 func (e *com) getAllPlaylists(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -1164,6 +1192,7 @@ func initGin(com *com) {
 
 	v1 := g.Group("/v1")
 	{
+		v1.POST("/addSongToPlaylist", com.addSongToPlaylist)
 		v1.GET("/allPlaylists", com.getAllPlaylists)
 		v1.POST("/clearPlaylist", com.clearPlaylist)
 		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)

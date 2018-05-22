@@ -54,6 +54,7 @@
             <td>{{ k.Artist }}</td>
             <td>{{ k.Album }}</td>
             <td>{{ k.Time }}</td>
+            <td><button type="button" @click="addSongToPlaylist(k.File)">Add</button></td>
           </tr>
         </table>
       </div>
@@ -76,6 +77,14 @@ export default {
   computed: {
   },
   methods: {
+    addSongToPlaylist (filename) {
+      if (this.location !== '') {
+        filename = this.location + '/' + filename
+      }
+      this.$resource('v1/addSongToPlaylist').save({songFilename: filename, playlistName: this.playlistName}).then((response) => {
+        console.log('coin')
+      })
+    },
     checkFilesList (loc) {
       if (this.location === '') {
         this.location = loc
