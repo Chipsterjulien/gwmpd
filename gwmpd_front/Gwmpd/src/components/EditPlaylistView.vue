@@ -38,6 +38,7 @@
           </tr>
           <tr v-for="(k, v) in available.directories" :key="v">
             <td @click="checkFilesList(k)">{{ k }}</td>
+            <td><button type="button" @click="addSongToPlaylist(k)">add</button></td>
           </tr>
         </table>
       </div>
@@ -82,7 +83,7 @@ export default {
         filename = this.location + '/' + filename
       }
       this.$resource('v1/addSongToPlaylist').save({songFilename: filename, playlistName: this.playlistName}).then((response) => {
-        console.log('coin')
+        this.getPlaylist()
       })
     },
     checkFilesList (loc) {

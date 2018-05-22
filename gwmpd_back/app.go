@@ -91,6 +91,11 @@ type mpdStat struct {
 	Uptime     string
 }
 
+type addSongForm struct {
+	SongFilename string `form:"songFilename" binding:"required"`
+	PlaylistName string `form:"playlistName" binding:"required"`
+}
+
 type locationForm struct {
 	Location string `form:"location" binding:"required"`
 }
@@ -120,31 +125,31 @@ type volumeForm struct {
 }
 
 func (e *com) addSongToPlaylist(c *gin.Context) {
-	// log := logging.MustGetLogger("log")
-	//
-	// var playlist playlistNameForm
-	//
-	// if err := c.ShouldBind(&playlist); err == nil {
-	// 	e.mutex.Lock()
-	// 	e.sendCmdToMPDChan <- append([]byte("playlistclear "), []byte(playlist.PlaylistName)...)
-	// 	for {
-	// 		line := <-e.cmdToConsumeChan
-	// 		if bytes.Equal(line, []byte("OK")) {
-	// 			e.mutex.Unlock()
-	// 			break
-	// 		}
-	//
-	// 		first, _ := splitLine(&line)
-	// 		switch first {
-	// 		default:
-	// 			log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
-	// 		}
-	// 	}
-	//
-	// 	c.JSON(200, gin.H{"clearPlaylist": "ok"})
-	// } else {
-	// 	log.Warningf("Unable to clear playlist \"%v\": %s\n", playlist.PlaylistName, err)
-	// }
+	log := logging.MustGetLogger("log")
+
+	var songForm addSongForm
+
+	if err := c.ShouldBind(&songForm); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistadd \"%s\" \"%s\"", songForm.PlaylistName, songForm.SongFilename))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"addSongToPlaylist": "ok", "playlistName": songForm.PlaylistName, "songFilename": songForm.SongFilename})
+	} else {
+		log.Warningf("Unable to add song in playlist: %s\n", err)
+	}
 }
 
 func (e *com) getAllPlaylists(c *gin.Context) {
