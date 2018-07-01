@@ -7,3 +7,4 @@ port = 6600
 
 [ginserver]
 port = 8060
+jwtSecretKey = "secret key"

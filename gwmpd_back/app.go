@@ -1199,13 +1199,11 @@ func initGin(com *com) {
 	// the jwt middleware
 	authMiddleware := &jwt.GinJWTMiddleware{
 		Realm:         "Restricted zone",
-		Key:           []byte("secret key"),
+		Key:           []byte(viper.GetString("jwtSecretKey")),
 		Timeout:       time.Minute,
 		MaxRefresh:    time.Minute,
 		Authenticator: authenticator,
-		// For refresh token
-		Authorizator: refreshToken,
-		// For errors
+		Authorizator:  refreshToken,
 		Unauthorized:  unauthorized,
 		TokenLookup:   "header:Authorization",
 		TokenHeadName: "Bearer",
