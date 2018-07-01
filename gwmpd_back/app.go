@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	jwt "github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	cors "github.com/itsjamie/gin-cors"
 	logging "github.com/op/go-logging"
@@ -1195,37 +1196,57 @@ func initGin(com *com) {
 		ValidateHeaders: false,
 	}))
 
-	v1 := g.Group("/v1")
+	// the jwt middleware
+	authMiddleware := &jwt.GinJWTMiddleware{
+		Realm:         "Restricted zone",
+		Key:           []byte("secret key"),
+		Timeout:       time.Minute,
+		MaxRefresh:    time.Minute,
+		Authenticator: authenticator,
+		// For refresh token
+		Authorizator: refreshToken,
+		// For errors
+		Unauthorized:  unauthorized,
+		TokenLookup:   "header:Authorization",
+		TokenHeadName: "Bearer",
+		TimeFunc:      time.Now,
+	}
+
+	g.POST("/login", authMiddleware.LoginHandler)
+
+	auth := g.Group("/v1")
+	auth.Use(authMiddleware.MiddlewareFunc())
 	{
-		v1.POST("/addSongToPlaylist", com.addSongToPlaylist)
-		v1.GET("/allPlaylists", com.getAllPlaylists)
-		v1.POST("/clearPlaylist", com.clearPlaylist)
-		v1.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
-		v1.GET("/currentPlaylist", com.getCurrentPlaylist)
-		v1.GET("/currentSong", com.getCurrentSong)
-		v1.GET("/filesList/*location", com.getFilesList)
-		v1.GET("/loadPlaylist/:name", com.getLoadPlaylist)
-		v1.GET("/pauseSong", com.getPauseSong)
-		v1.GET("/playlistSongsList/:name", com.getPlaylistSongsList)
-		v1.GET("/playSong", com.getPlaySong)
-		v1.GET("/playSong/:pos", com.getPlaySongWithID)
-		v1.GET("/previousSong", com.getPreviousSong)
-		v1.POST("moveSong", com.moveSong)
-		v1.GET("/nextSong", com.getNextSong)
-		v1.POST("/removePlaylist", com.removePlaylist)
-		v1.POST("/removeSong", com.removeSong)
-		v1.POST("/renamePlaylist", com.renamePlaylist)
-		v1.POST("/savePlaylist", com.savePlaylist)
-		v1.POST("/setVolume", com.setVolume)
-		v1.GET("/shuffle", com.shuffle)
-		v1.GET("/statusMPD", com.getStatusMPD)
-		v1.GET("/stopSong", com.getStopSong)
-		v1.PUT("/toggleConsume", com.toggleConsume)
-		v1.PUT("/toggleRandom", com.toggleRandom)
-		v1.PUT("/toggleSingle", com.toggleSingle)
-		v1.PUT("/toggleRepeat", com.toggleRepeat)
-		v1.PUT("/toggleMuteVolume", com.toggleMuteVolume)
-		v1.GET("/updateDB", com.updateDB)
+		auth.POST("/addSongToPlaylist", com.addSongToPlaylist)
+		auth.GET("/allPlaylists", com.getAllPlaylists)
+		auth.POST("/clearPlaylist", com.clearPlaylist)
+		auth.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
+		auth.GET("/currentPlaylist", com.getCurrentPlaylist)
+		auth.GET("/currentSong", com.getCurrentSong)
+		auth.GET("/filesList/*location", com.getFilesList)
+		auth.GET("/loadPlaylist/:name", com.getLoadPlaylist)
+		auth.GET("/pauseSong", com.getPauseSong)
+		auth.GET("/playlistSongsList/:name", com.getPlaylistSongsList)
+		auth.GET("/playSong", com.getPlaySong)
+		auth.GET("/playSong/:pos", com.getPlaySongWithID)
+		auth.GET("/previousSong", com.getPreviousSong)
+		auth.POST("moveSong", com.moveSong)
+		auth.GET("/nextSong", com.getNextSong)
+		auth.GET("/refresh", authMiddleware.RefreshHandler)
+		auth.POST("/removePlaylist", com.removePlaylist)
+		auth.POST("/removeSong", com.removeSong)
+		auth.POST("/renamePlaylist", com.renamePlaylist)
+		auth.POST("/savePlaylist", com.savePlaylist)
+		auth.POST("/setVolume", com.setVolume)
+		auth.GET("/shuffle", com.shuffle)
+		auth.GET("/statusMPD", com.getStatusMPD)
+		auth.GET("/stopSong", com.getStopSong)
+		auth.PUT("/toggleConsume", com.toggleConsume)
+		auth.PUT("/toggleRandom", com.toggleRandom)
+		auth.PUT("/toggleSingle", com.toggleSingle)
+		auth.PUT("/toggleRepeat", com.toggleRepeat)
+		auth.PUT("/toggleMuteVolume", com.toggleMuteVolume)
+		auth.GET("/updateDB", com.updateDB)
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
@@ -1235,16 +1256,12 @@ func initGin(com *com) {
 	}
 }
 
-func initMPDSocket() net.Conn {
-	log := logging.MustGetLogger("log")
-
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", viper.GetString("mpdserver.ip"), viper.GetInt("mpdserver.port")))
-	if err != nil {
-		log.Criticalf("Unable to connect to mpd server: %s", err)
-		os.Exit(1)
+func authenticator(userID string, password string, c *gin.Context) (interface{}, bool) {
+	if (userID == "admin@admin.com" && password == "admin") || (userID == "test" && password == "test") {
+		return userID, true
 	}
 
-	return conn
+	return userID, false
 }
 
 func getSongInfos(e *com, song *mpdCurrentSong, location *string, songFile *string) error {
@@ -1294,16 +1311,24 @@ func getSongInfos(e *com, song *mpdCurrentSong, location *string, songFile *stri
 	}
 }
 
-func main() {
-	confPath := "cfg/"
-	confFilename := "gwmpd_sample"
-	logFilename := "error.log"
+func initMPDSocket() net.Conn {
+	log := logging.MustGetLogger("log")
 
-	fd := initLogging(&logFilename)
-	defer fd.Close()
+	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", viper.GetString("mpdserver.ip"), viper.GetInt("mpdserver.port")))
+	if err != nil {
+		log.Criticalf("Unable to connect to mpd server: %s", err)
+		os.Exit(1)
+	}
 
-	loadConfig(&confPath, &confFilename)
-	startApp()
+	return conn
+}
+
+func refreshToken(userID interface{}, c *gin.Context) bool {
+	if userID == "admin@admin.com" {
+		return true
+	}
+
+	return false
 }
 
 func splitLine(line *[]byte) (string, string) {
@@ -1339,6 +1364,25 @@ func startApp() {
 	go eventManagement(com)
 
 	initGin(com)
+}
+
+func unauthorized(c *gin.Context, code int, message string) {
+	c.JSON(code, gin.H{
+		"code":    code,
+		"message": message,
+	})
+}
+
+func main() {
+	confPath := "cfg/"
+	confFilename := "gwmpd_sample"
+	logFilename := "error.log"
+
+	fd := initLogging(&logFilename)
+	defer fd.Close()
+
+	loadConfig(&confPath, &confFilename)
+	startApp()
 }
 
 func readLineProcess(mpdResponseChan chan<- []byte, socket net.Conn) {

@@ -6,6 +6,7 @@ import QueueView from '@/components/QueueView'
 import SideBarView from '@/components/SideBarView'
 import EditPlaylistView from '@/components/EditPlaylistView'
 import LoginView from '@/components/LoginView'
+// import GlobalView from '@/components/GlobalView'
 
 Vue.use(Router)
 
