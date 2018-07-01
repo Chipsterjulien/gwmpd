@@ -1199,7 +1199,7 @@ func initGin(com *com) {
 	// the jwt middleware
 	authMiddleware := &jwt.GinJWTMiddleware{
 		Realm:         "Restricted zone",
-		Key:           []byte(viper.GetString("jwtSecretKey")),
+		Key:           []byte(viper.GetString("ginserver.jwtSecretKey")),
 		Timeout:       time.Minute,
 		MaxRefresh:    time.Minute,
 		Authenticator: authenticator,
@@ -1255,7 +1255,7 @@ func initGin(com *com) {
 }
 
 func authenticator(userID string, password string, c *gin.Context) (interface{}, bool) {
-	if (userID == "admin@admin.com" && password == "admin") || (userID == "test" && password == "test") {
+	if userID == viper.GetString("ginserver.login") && password == viper.GetString("ginserver.password") {
 		return userID, true
 	}
 
@@ -1322,7 +1322,7 @@ func initMPDSocket() net.Conn {
 }
 
 func refreshToken(userID interface{}, c *gin.Context) bool {
-	if userID == "admin@admin.com" {
+	if userID == viper.GetString("ginserver.login") {
 		return true
 	}
 
