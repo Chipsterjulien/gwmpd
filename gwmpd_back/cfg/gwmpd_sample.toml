@@ -1,5 +1,5 @@
 # logtype can take: debug, info, notice, warning, error, critical
-logtype = "debug"
+logtype = "info"
 
 [mpdserver]
 ip = "localhost"

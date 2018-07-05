@@ -1,43 +1,62 @@
 # gwmpd
-MPD Web GUI - written in Go (multithread)
+MPD Web GUI - written in Go (multithread/async)
 
 There are 2 parts:
 * the backend which written in Go. It communicates with mpd and web GUI
 * the frontend which written in JS (vuejs)
 
-__Be careful. Actually, there is NO security between gui and the REST API so make local test__
-__DO NOT expose REST API on internet !__
+__Rest API is now secure with JWT token but you MUST use it over https__
+__GUI is still ugly__
 
 ## Dependencies
+These programs are only useful for build backend and frontend:
 * go
-* gin
-* cors (middleware)
-* viper
-* go-logging
-* vuejs
+* yarn (you can easily replace yarn by npm)
+* git
 
-## Install
+## Install to your server
+### Build
 ```sh
-go get github.com/gin-gonic/gin
-go get github.com/itsjamie/gin-cors
-go get github.com/op/go-logging
-go get github.com/spf13/viper
-
 git clone https://github.com/Chipsterjulien/gwmpd.git
-```
-Inside first console:
-```sh
-cd gwmpd_back
-go run app.go initLogging.go loadConfig.go
+cd gwmpd/
+chmod +x auto_build.sh
+./auto_build.sh
 ```
 
-Inside second console:
+### Backend
+After building, move back/gwmpdBack to your /usr/bin and:
 ```sh
-cd gwmpd_front/Gwmpd
-yarn
-yarn start
+chmod +x /usr/bin/gwmpdBack
 ```
 
-Start your browser to [http://localhost:8080](http://localhost:8080)
+Add it in your initd.
+To finish:
+```sh
+mkdir /etc/gwmpd
+mv back/cfg/gwmpd_sample.toml /etc/gwmpd/gwmpd.toml
+```
+
+Change /var/log/gwmpd right with chown:
+```sh
+chown your_user: /var/log/gwmpd
+```
+
+### Frontend
+__YOU MUST USE HTTPS IF YOU EXPOSE YOUR API ON THE WEB__
+
+After building, move all files in your root server. For example:
+```sh
+mv front/* /var/www
+```
 
 ## Config
+Edit /etc/gwmpd/gwmpd.toml by changing:
+* IP address
+* port numbers
+* your new jwtSecretKey
+* login and password of course
+
+If you expose gwmpdBack to the web, open ginserver's port on your server by modifying your firewall and don't forget to redirect port on your modem
+
+## Starting
+Start mpd server, start /usr/bin/gwmpdBack, open your browser and finally go to your server

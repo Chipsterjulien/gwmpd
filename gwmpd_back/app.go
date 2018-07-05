@@ -21,13 +21,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Regarder ici pour l'authentification: https://github.com/appleboy/gin-jwt
-
 // Pour les commandes mpd via le socket:
 // https://www.musicpd.org/doc/protocol/command_reference.html
-
-// Com ma chin chose à mettre correctement
-// Pour plus d'info, voir ici: https://github.com/gin-gonic/gin/issues/932
 
 type com struct {
 	cmdToConsumeChan chan []byte
@@ -1356,9 +1351,13 @@ func unauthorized(c *gin.Context, code int, message string) {
 }
 
 func main() {
-	confPath := "cfg/"
-	confFilename := "gwmpd_sample"
-	logFilename := "error.log"
+	confPath := "/etc/gwmpd"
+	confFilename := "gwmpd"
+	logFilename := "/var/log/gwmpd/error.log"
+
+	// confPath := "cfg/"
+	// confFilename := "gwmpd_sample"
+	// logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()
