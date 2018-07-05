@@ -36,45 +36,53 @@ export default {
       'setRepeat'
     ]),
     clearQueue () {
-      this.$resource('v1/clearCurrentPlaylist').get().then((response) => {
-        this.setPlaylist({})
-      })
+      this.axios.get('v1/clearCurrentPlaylist')
+        .then(response => {
+          this.setPlaylist({})
+        })
     },
     shuffle () {
-      this.$resource('v1/shuffle').get().then((response) => {
-        this.$resource('v1/currentPlaylist').get().then((response) => {
-          this.setPlaylist(response.data)
+      this.axios.get('v1/shuffle')
+        .then(response => {
+          this.axios.get('v1/currentPlaylist')
+            .then(response => {
+              this.setPlaylist(response.data)
+            })
         })
-      })
     },
     toggleConsume () {
-      this.$resource('v1/toggleConsume').update().then((response) => {
-        this.setConsume(response.data.consume)
-      })
+      this.axios.put('v1/toggleConsume')
+        .then(response => {
+          this.setConsume(response.data.consume)
+        })
     },
     toggleRandom () {
-      this.$resource('v1/toggleRandom').update().then((response) => {
-        this.setRandom(response.data.random)
-      })
+      this.axios.put('v1/toggleRandom')
+        .then(response => {
+          this.setRandom(response.data.random)
+        })
     },
     toggleRepeat () {
-      this.$resource('v1/toggleRepeat').update().then((response) => {
-        this.setRepeat(response.data.repeat)
-      })
+      this.axios.put('v1/toggleRepeat')
+        .then(response => {
+          this.setRepeat(response.data.repeat)
+        })
     },
     toggleSingle () {
-      this.$resource('v1/toggleSingle').update().then((response) => {
-        this.setSingle(response.data.single)
-      })
+      this.axios.put('v1/toggleSingle')
+        .then(response => {
+          this.setSingle(response.data.single)
+        })
     },
     updateDB () {
-      this.$resource('v1/updateDB').get()
+      this.axios.get('v1/updateDB')
     }
   },
   mounted () {
-    this.$resource('v1/statusMPD').get().then((response) => {
-      this.setAllStatus(response.data)
-    })
+    this.axios.get('v1/statusMPD')
+      .then(response => {
+        this.setAllStatus(response.data)
+      })
   }
 }
 </script>

@@ -6,7 +6,16 @@
     <br>
     <button type="button" @click="clearPlaylist">Clear</button><br>
     <input type="text" v-model="newPlaylistName">
-    <button type="button" @click="renamePlaylist">Rename</button>
+    <button type="button" @click="renamePlaylist">Rename</button><br>
+    <br>
+    <!-- <div class="">
+      <form class="" @submit.prevent="addURL">
+        <label for="urlWebRadio">Webradio's URL</label>
+        <input v-model="webradioURL" type="text" id="urlWebRadio">
+        <button type="submit">add</button>
+      </form>
+    </div> -->
+    <br>
     <div class="">
       <table v-if="playlist.length">
         <tr>
@@ -32,7 +41,7 @@
         Location: <span @click="pathDown">{{ location }}</span>
       </div>
       <div class="">
-        <table v-if="Object.keys(available).length">
+        <table v-if="available.directories">
           <tr>
             <th>Directory's name</th>
           </tr>
@@ -43,7 +52,7 @@
         </table>
       </div>
       <div class="">
-        <table>
+        <table v-if="available.songs.length">
           <tr>
             <th>File's name</th>
             <th>Artist</th>
@@ -68,11 +77,15 @@ export default {
   name: 'EditPlaylistView',
   data () {
     return {
-      available: {},
+      available: {
+        directories: [],
+        songs: []
+      },
       location: '',
       newPlaylistName: '',
       playlist: [],
-      playlistName: ''
+      playlistName: '',
+      webradioURL: ''
     }
   },
   computed: {
@@ -82,9 +95,22 @@ export default {
       if (this.location !== '') {
         filename = this.location + '/' + filename
       }
-      this.$resource('v1/addSongToPlaylist').save({songFilename: filename, playlistName: this.playlistName}).then((response) => {
-        this.getPlaylist()
+      this.axios.post('v1/addSongToPlaylist', {
+        songFilename: filename,
+        playlistName: this.playlistName
       })
+        .then(response => {
+          this.getPlaylist()
+        })
+    },
+    addURL () {
+      this.axios.post('v1/addSongToPlaylist', {
+        songFilename: this.webradioURL,
+        playlistName: this.playlistName
+      })
+        .then(response => {
+          this.getPlaylist()
+        })
     },
     checkFilesList (loc) {
       if (this.location === '') {
@@ -95,39 +121,62 @@ export default {
       this.getFilesList()
     },
     clearPlaylist () {
-      this.$resource('v1/clearPlaylist').save({playlistName: this.playlistName}).then((response) => {
-        this.playlist = {}
-      })
+      this.axios.post('v1/clearPlaylist', {playlistName: this.playlistName})
+        .then(response => {
+          this.playlist = {}
+        })
     },
     getFilesList () {
-      this.$resource('v1/filesList{/location}').get({location: this.location}).then((response) => {
-        this.available = response.data
-      })
+      this.axios.get('v1/filesList', {params: {location: this.location}})
+        .then(response => {
+          this.available = response.data
+        })
     },
     getPlaylist () {
-      this.$resource('v1/playlistSongsList{/playlistName}').get({playlistName: this.playlistName}).then((response) => {
-        this.playlist = response.data
-      })
+      this.axios.get('v1/playlistSongsList', {params: {playlistName: this.playlistName}})
+        .then(response => {
+          this.playlist = response.data
+        })
     },
     moveBottom (actualPos) {
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldPos: actualPos, newPos: this.playlist.length - 1}).then((response) => {
-        this.getPlaylist()
+      this.axios.post('v1/moveSong', {
+        playlistName: this.playlistName,
+        oldPos: actualPos,
+        newPos: this.playlist.length - 1
       })
+        .then(response => {
+          this.getPlaylist()
+        })
     },
     moveTop (actualPos) {
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldPos: actualPos, newPos: 0}).then((response) => {
-        this.getPlaylist()
+      this.axios.post('v1/moveSong', {
+        playlistName: this.playlistName,
+        oldPos: actualPos,
+        newPos: 0
       })
+        .then(response => {
+          this.getPlaylist()
+        })
     },
     moveDown (actualPos) {
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldPos: actualPos, newPos: actualPos + 1}).then((response) => {
-        this.getPlaylist()
+      this.axios.post('v1/moveSong', {
+        playlistName: this.playlistName,
+        oldPos: actualPos,
+        newPos: this.playlist.length + 1
       })
+        .then(response => {
+          this.getPlaylist()
+        })
     },
     moveUp (actualPos) {
-      this.$resource('v1/moveSong').save({playlistName: this.playlistName, oldpos: actualPos, newpos: actualPos - 1}).then((response) => {
-        this.getPlaylist()
+      this.axios.post('v1/moveSong', {
+        playlistName: this.playlistName,
+        oldPos: actualPos,
+        newPos: this.playlist.length - 1
       })
+        .then(response => {
+          this.getPlaylist()
+        })
     },
     pathDown () {
       if (location !== '') {
@@ -137,15 +186,23 @@ export default {
       }
     },
     removeSong (actualPos) {
-      this.$resource('v1/removeSong').save({playlistName: this.playlistName, pos: actualPos}).then((response) => {
-        this.getPlaylist()
+      this.axios.post('v1/removeSong', {
+        playlistName: this.playlistName,
+        pos: actualPos
       })
+        .then(response => {
+          this.getPlaylist()
+        })
     },
     renamePlaylist () {
-      this.$resource('v1/renamePlaylist').save({oldName: this.playlistName, newName: this.newPlaylistName}).then((response) => {
-        this.playlistName = response.data.newName
-        this.newPlaylistName = this.playlistName
+      this.axios.post('v1/renamePlaylist', {
+        oldName: this.playlistName,
+        newName: this.newPlaylistName
       })
+        .then(response => {
+          this.playlistName = response.data.newName
+          this.newPlaylistName = this.playlistName
+        })
     }
   },
   mounted () {

@@ -52,19 +52,21 @@ export default {
       'setID'
     ]),
     playSong (id, pos) {
-      this.$resource('v1/playSong{/pos}').get({pos: pos}).then((response) => {
-        this.setID(id)
-        if (this.songPlayed !== true) {
-          this.setState('play')
-          this.songPlayed = true
-        }
-      })
+      this.axios.get('v1/playSong', {params: {pos: pos}})
+        .then(response => {
+          this.setID(id)
+          if (this.songPlayed !== true) {
+            this.setState('play')
+            this.songPlayed = true
+          }
+        })
     }
   },
   mounted () {
-    this.$resource('v1/currentPlaylist').get().then((response) => {
-      this.setPlaylist(response.data)
-    })
+    this.axios.get('v1/currentPlaylist')
+      .then(response => {
+        this.setPlaylist(response.data)
+      })
   }
 }
 </script>

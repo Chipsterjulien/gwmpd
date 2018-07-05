@@ -43,33 +43,41 @@ export default {
       'setAllPlaylists'
     ]),
     addNewPlaylist () {
-      this.$resource('v1/savePlaylist').save({playlistName: this.newPlaylist}).then((response) => {
-        this.newPlaylist = ''
-        this.loadAllPlaylists()
+      this.axios.post('v1/savePlaylist', {
+        playlistName: this.newPlaylist
       })
+        .then(response => {
+          this.newPlaylist = ''
+          this.loadAllPlaylists()
+        })
     },
     clearAndLoadPlaylist (name) {
-      this.$resource('v1/clearCurrentPlaylist').get().then((response) => {
-        this.loadPlaylist(name)
-      })
+      this.axios.get('v1/clearCurrentPlaylist')
+        .then(response => {
+          this.loadPlaylist(name)
+        })
     },
     loadAllPlaylists () {
-      this.$resource('v1/allPlaylists').get().then((response) => {
-        this.setAllPlaylists(response.data)
-      })
+      this.axios.get('v1/allPlaylists')
+        .then(response => {
+          this.setAllPlaylists(response.data)
+        })
     },
     loadPlaylist (name) {
-      this.$resource('v1/loadPlaylist{/name}').get({name: name}).then((response) => {
-        this.$resource('v1/playSong').get().then((response) => {
-          this.setState('play')
-          this.songPlayed = true
+      this.axios.get('v1/loadPlaylist', {params: {name: name}})
+        .then(response => {
+          this.axios.get('v1/playSong')
+            .then(response => {
+              this.setState('play')
+              this.songPlayed = true
+            })
         })
-      })
     },
     removePlaylist (name) {
-      this.$resource('v1/removePlaylist').save({playlistName: name}).then((response) => {
-        this.loadAllPlaylists()
-      })
+      this.axios.post('v1/removePlaylist', {playlistName: name})
+        .then(response => {
+          this.loadAllPlaylists()
+        })
     }
   },
   mounted () {

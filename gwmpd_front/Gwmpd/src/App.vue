@@ -1,44 +1,44 @@
 <template>
   <div id="app">
-    <div class="TopBar">
-      {{ appName }}
-      <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
-      <router-link :to="{ name: 'PlaylistView', params: {} }">Playlists</router-link>
-      <router-link :to="{ name: 'AboutView', params: {} }">About</router-link>
-    </div>
-    <div class="">
-      <div class="" v-if="connected">
-        Connected
-      </div>
-      <div class="" v-else>
-        Disconnected
-      </div>
-    </div>
-    <div class="">
-      <button type="button" name="previousSong" @click="previousSong">Previous</button>
-      <button type="button" name="stopSong" @click="stopSong">Stop</button>
-      <button type="button" name="playSong" @click="playSong" v-if="!songPlayed">Play</button>
-      <button type="button" name="pauseSong" @click="pauseSong" v-if="songPlayed">Pause</button>
-      <button type="button" name="forwardSong" @click="forwardSong">Forward</button>
-    </div>
-    <div class="">
-      <!-- song's volume -->
-      <div class="">
-        Volume: {{ getStatus.volume }}
+    <div class="" v-if="connected">
+      <div class="TopBar">
+        {{ appName }}
+        <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
+        <router-link :to="{ name: 'PlaylistView', params: {} }">Playlists</router-link>
+        <router-link :to="{ name: 'AboutView', params: {} }">About</router-link>
       </div>
       <div class="">
-        <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>
-        <button type="button" name="lessVolume" @click="lessVolume">Less</button>
-        <button type="button" name="moreVolume" @click="moreVolume">More</button>
+        <div class="" v-if="connected">
+          Connected
+        </div>
+        <div class="" v-else>
+          Disconnected
+        </div>
+      </div>
+      <div class="">
+        <button type="button" name="previousSong" @click="previousSong">Previous</button>
+        <button type="button" name="stopSong" @click="stopSong">Stop</button>
+        <button type="button" name="playSong" @click="playSong" v-if="!songPlayed">Play</button>
+        <button type="button" name="pauseSong" @click="pauseSong" v-if="songPlayed">Pause</button>
+        <button type="button" name="forwardSong" @click="forwardSong">Forward</button>
+      </div>
+      <div class="">
+        <!-- song's volume -->
+        <div class="">
+          Volume: {{ getStatus.volume }}
+        </div>
+        <div class="">
+          <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>
+          <button type="button" name="lessVolume" @click="lessVolume">Less</button>
+          <button type="button" name="moreVolume" @click="moreVolume">More</button>
+        </div>
+      </div>
+      <div class="" v-if="getStatus.error !== ''">
+        Error: {{ getStatus.error }}
       </div>
     </div>
-    <div class="" v-if="getStatus.error !== ''">
-      Error: {{ getStatus.error }}
-    </div>
-    <div class="">
-      <router-view/>
-      <router-view name="SideBar"/>
-    </div>
+    <router-view/>
+    <router-view name="SideBar"/>
   </div>
 </template>
 
@@ -60,6 +60,17 @@ export default {
     })
   },
   methods: {
+    refresh () {
+      this.$auth.refresh({
+        success: function (response) {
+          this.$auth.token(null, response.data.token)
+          sessionStorage.token = response.data.token
+        },
+        error: function (e) {
+          delete sessionStorage.token
+        }
+      })
+    },
     ...mapActions([
       'setAllStatus',
       'setSong',
@@ -69,63 +80,84 @@ export default {
     ]),
     lessVolume () {
       if (this.getStatus.volume >= 5) {
-        this.$resource('v1/setVolume').save({volume: this.getStatus.volume - 5}).then((response) => {
-          this.setVolume(response.data.volume)
+        this.axios.post('v1/setVolume', {
+          volume: this.getStatus.volume - 5
         })
+          .then(response => {
+            this.setVolume(response.data.volume)
+          })
       }
     },
     moreVolume () {
       if (this.getStatus.volume <= 95) {
-        this.$resource('v1/setVolume').save({volume: this.getStatus.volume + 5}).then((response) => {
-          this.setVolume(response.data.volume)
+        this.axios.post('v1/setVolume', {
+          volume: this.getStatus.volume + 5
         })
+          .then(response => {
+            this.setVolume(response.data.volume)
+          })
       }
     },
     toggleMuteVolume () {
-      this.$resource('v1/toggleMuteVolume').update().then((response) => {
-        this.setVolume(response.data.volume)
-      })
+      this.axios.put('v1/toggleMuteVolume')
+        .then(response => {
+          this.setVolume(response.data.volume)
+        })
     },
     forwardSong () {
-      this.$resource('v1/nextSong').get()
+      this.axios.get('v1/nextSong')
     },
     pauseSong () {
       if (this.getStatus.state !== 'pause') {
-        this.$resource('v1/pauseSong').get().then((response) => {
-          this.setState('pause')
-          this.songPlayed = false
-        })
+        this.axios.get('v1/pauseSong')
+          .then(response => {
+            this.setState('pause')
+            this.songPlayed = false
+          })
       }
     },
     playSong () {
       if (this.getStatus.state !== 'play') {
-        this.$resource('v1/playSong').get().then((response) => {
-          this.setState('play')
-          this.songPlayed = true
-        })
+        this.axios.get('v1/playSong')
+          .then(response => {
+            this.setState('play')
+            this.songPlayed = true
+          })
       }
     },
     previousSong () {
-      this.$resource('v1/previousSong').get()
+      this.axios.get('v1/previousSong')
     },
     stopSong () {
       if (this.getStatus.state !== 'stop') {
-        this.$resource('v1/stopSong').get().then((response) => {
-          this.setState('stop')
-          this.songPlayed = false
-        })
+        this.axios.get('v1/stopSong')
+          .then(response => {
+            this.setState('stop')
+            this.songPlayed = false
+          })
       }
     }
   },
   mounted () {
-    this.$interval = setInterval(() => {
-      this.$resource('v1/statusMPD').get().then((response) => {
+    console.log('mounted app.vue')
+
+    if (this.$auth.watch.authenticated) {
+      // refresh token if F5 was sent
+      this.refresh()
+    }
+
+    this.$refreshTokenInterval = setInterval(() => {
+      this.refresh()
+    }, 55000)
+
+    this.$refreshMpdDataInterval = setInterval(() => {
+      this.axios.get('v1/statusMPD').then((response) => {
         this.setAllStatus(response.data)
         this.connected = true
         if (response.data.state === 'play') {
-          this.$resource('v1/currentSong').get().then((response) => {
+          this.axios.get('v1/currentSong').then((response) => {
             if (this.getCurrentSongInfos.Title !== response.data.Title) {
-              this.$resource('v1/currentPlaylist').get().then((response) => {
+              this.axios.get('v1/currentPlaylist').then((response) => {
                 this.setPlaylist(response.data)
               })
             }
@@ -139,20 +171,17 @@ export default {
         this.connected = false
       })
     }, 1000)
-  },
-  destroy () {
-    clearInterval(this.$interval)
   }
 }
 </script>
 
 <style lang="scss">
-#app {
-  /* font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px; */
-}
+// #app {
+//   font-family: 'Avenir', Helvetica, Arial, sans-serif;
+//   -webkit-font-smoothing: antialiased;
+//   -moz-osx-font-smoothing: grayscale;
+//   text-align: center;
+//   color: #2c3e50;
+//   margin-top: 60px;
+// }
 </style>

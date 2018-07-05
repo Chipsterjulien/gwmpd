@@ -312,10 +312,7 @@ func (e *com) getFilesList(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	location := c.Param("location")
-	if len(location) > 0 {
-		location = location[1:]
-	}
+	location := c.DefaultQuery("location", "")
 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("listfiles \"%s\"", location))
 
 	directories := []string{}
@@ -364,7 +361,7 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	name := c.Param("name")
+	name := c.DefaultQuery("name", "")
 	e.sendCmdToMPDChan <- append([]byte("load "), []byte(name)...)
 
 	for {
@@ -463,7 +460,12 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	name := c.Param("name")
+	name := c.DefaultQuery("name", "")
+	if name == "" {
+		e.mutex.Unlock()
+		return
+	}
+
 	e.sendCmdToMPDChan <- append([]byte("listplaylistinfo "), []byte(name)...)
 
 	playlist := []mpdCurrentSong{}
@@ -522,31 +524,12 @@ func (e *com) getPlaySong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("play")
-
-	for {
-		line := <-e.cmdToConsumeChan
-		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
-			break
-		}
-
-		first, _ := splitLine(&line)
-		switch first {
-		default:
-			log.Infof("In getPlaySong, unknown: \"%s\"\n", first)
-		}
+	pos := c.DefaultQuery("pos", "")
+	if pos == "" {
+		e.sendCmdToMPDChan <- []byte("play")
+	} else {
+		e.sendCmdToMPDChan <- append([]byte("play "), []byte(pos)...)
 	}
-
-	c.JSON(200, gin.H{"playSong": "ok"})
-}
-
-func (e *com) getPlaySongWithID(c *gin.Context) {
-	log := logging.MustGetLogger("log")
-
-	e.mutex.Lock()
-	pos := c.Param("pos")
-	e.sendCmdToMPDChan <- append([]byte("play "), []byte(pos)...)
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -851,7 +834,8 @@ func (e *com) removePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- append([]byte("rm "), []byte(playlistName.PlaylistName)...)
+		// e.sendCmdToMPDChan <- append([]byte("rm "), []byte(playlistName.PlaylistName)...)
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rm \"%s\"", playlistName.PlaylistName))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
@@ -935,7 +919,8 @@ func (e *com) savePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- append([]byte("save "), []byte(playlistName.PlaylistName)...)
+		// e.sendCmdToMPDChan <- append([]byte("save \""), []byte(playlistName.PlaylistName), []byte("\"")...)
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("save \"%s\"", playlistName.PlaylistName))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
@@ -1221,12 +1206,11 @@ func initGin(com *com) {
 		auth.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
 		auth.GET("/currentPlaylist", com.getCurrentPlaylist)
 		auth.GET("/currentSong", com.getCurrentSong)
-		auth.GET("/filesList/*location", com.getFilesList)
-		auth.GET("/loadPlaylist/:name", com.getLoadPlaylist)
+		auth.GET("/filesList", com.getFilesList)
+		auth.GET("/loadPlaylist", com.getLoadPlaylist)
 		auth.GET("/pauseSong", com.getPauseSong)
-		auth.GET("/playlistSongsList/:name", com.getPlaylistSongsList)
+		auth.GET("/playlistSongsList", com.getPlaylistSongsList)
 		auth.GET("/playSong", com.getPlaySong)
-		auth.GET("/playSong/:pos", com.getPlaySongWithID)
 		auth.GET("/previousSong", com.getPreviousSong)
 		auth.POST("moveSong", com.moveSong)
 		auth.GET("/nextSong", com.getNextSong)

@@ -1,12 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import AboutView from '@/components/AboutView'
-import PlaylistView from '@/components/PlaylistView'
+import Login from '@/components/Login'
 import QueueView from '@/components/QueueView'
 import SideBarView from '@/components/SideBarView'
+import PlaylistView from '@/components/PlaylistView'
 import EditPlaylistView from '@/components/EditPlaylistView'
-import LoginView from '@/components/LoginView'
-// import GlobalView from '@/components/GlobalView'
+import AboutView from '@/components/AboutView'
 
 Vue.use(Router)
 
@@ -16,16 +15,16 @@ export default new Router({
     {
       path: '/',
       name: 'QueueView',
+      meta: {auth: true},
       components: {
         default: QueueView,
         SideBar: SideBarView
       }
     }, {
-      path: '/playlist',
-      name: 'PlaylistView',
-      components: {
-        default: PlaylistView
-      }
+      path: '/login',
+      name: 'Login',
+      meta: {auth: false},
+      component: Login
     }, {
       path: '/about',
       name: 'AboutView',
@@ -33,15 +32,19 @@ export default new Router({
         default: AboutView
       }
     }, {
+      path: '/playlist',
+      name: 'PlaylistView',
+      meta: {auth: true},
+      components: {
+        default: PlaylistView
+      }
+    }, {
       path: '/editPlaylist/:playlistName',
       name: 'EditPlaylistView',
+      meta: {auth: true},
       components: {
         default: EditPlaylistView
       }
-    }, {
-      path: '/login',
-      name: 'LoginView',
-      component: LoginView
     }, {
       path: '*',
       redirect: '/'
