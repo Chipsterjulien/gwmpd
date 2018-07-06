@@ -357,7 +357,7 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 
 	e.mutex.Lock()
 	name := c.DefaultQuery("name", "")
-	e.sendCmdToMPDChan <- append([]byte("load "), []byte(name)...)
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("load \"%s\"", name))
 
 	for {
 		line := <-e.cmdToConsumeChan

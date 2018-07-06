@@ -8,13 +8,13 @@
     <input type="text" v-model="newPlaylistName">
     <button type="button" @click="renamePlaylist">Rename</button><br>
     <br>
-    <!-- <div class="">
+    <div class="">
       <form class="" @submit.prevent="addURL">
         <label for="urlWebRadio">Webradio's URL</label>
         <input v-model="webradioURL" type="text" id="urlWebRadio">
         <button type="submit">add</button>
       </form>
-    </div> -->
+    </div>
     <br>
     <div class="">
       <table v-if="playlist.length">
