@@ -24,8 +24,9 @@ chmod +x auto_build.sh
 ```
 
 ### Backend
-After building, move back/gwmpdBack to your /usr/bin and:
+After building, move gwmpdBack to your /usr/bin as follow:
 ```sh
+mv back/gwmpdBack /usr/bin
 chmod +x /usr/bin/gwmpdBack
 ```
 
@@ -43,8 +44,6 @@ chown your_user: /var/log/gwmpd
 ```
 
 ### Frontend
-__YOU MUST USE HTTPS IF YOU EXPOSE YOUR API ON THE WEB__
-
 After building, move all files in your root server. For example:
 ```sh
 mv front/* /var/www
@@ -57,7 +56,7 @@ Edit /etc/gwmpd/gwmpd.toml by changing:
 * your new jwtSecretKey
 * login and password of course
 
-If you expose gwmpdBack to the web, open ginserver's port on your server by modifying your firewall and don't forget to redirect port on your modem
+If you expose gwmpdBack to the web (__YOU MUST USE HTTPS__), open ginserver's port on your server by modifying your firewall and don't forget to redirect port on your modem
 
 ## Starting
 Start mpd server, start /usr/bin/gwmpdBack, open your browser and finally go to your server
