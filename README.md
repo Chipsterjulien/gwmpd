@@ -36,8 +36,9 @@ mkdir /etc/gwmpd
 mv back/cfg/gwmpd_sample.toml /etc/gwmpd/gwmpd.toml
 ```
 
-Change /var/log/gwmpd right with chown:
+Create log directory and change /var/log/gwmpd right with chown:
 ```sh
+mkdir -p /var/log/gwmpd
 chown your_user: /var/log/gwmpd
 ```
 
