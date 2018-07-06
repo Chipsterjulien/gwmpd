@@ -5,7 +5,7 @@ There are 2 parts:
 * the backend which written in Go. It communicates with mpd and web GUI
 * the frontend which written in JS (vuejs)
 
-__Rest API is now secure with JWT token but you MUST use it over https__
+__Rest API is now secure with JWT token but you MUST use it over https__  
 __GUI is still ugly__
 
 ## Dependencies
