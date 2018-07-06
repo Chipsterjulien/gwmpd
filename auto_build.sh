@@ -24,6 +24,4 @@ cd dist/
 mv * ../../../front
 cd ../../..
 rm -rf gwmpd_back gwmpd_front
-
-# create log directory
-mkdir -p /var/log/gwmpd
+rm License README.md auto_build.sh
