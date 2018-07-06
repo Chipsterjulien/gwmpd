@@ -19,7 +19,7 @@ cd ..
 # build frontend
 cd gwmpd_front/Gwmpd/
 yarn
-yarn start
+yarn build
 cd dist/
 mv * ../../../front
 cd ../../..
