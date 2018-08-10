@@ -14,11 +14,13 @@
       <table v-if="currentPlaylist.length">
         <tr>
           <th>#</th>
+          <th>File</th>
           <th>Title</th>
           <th>Duration</th>
         </tr>
         <tr v-for="(k, v) in currentPlaylist" :key="v">
           <td>{{ k.Pos + 1 }}</td>
+          <td>{{ k.File }}</td>
           <td>{{ k.Title }}</td>
           <td>{{ k.Time }}</td>
           <td v-if="currentSong.Id !== k.Id"><button @click="playSong(k.Id, k.Pos)">play</button></td>
