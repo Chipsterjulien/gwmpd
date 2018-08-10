@@ -1,6 +1,7 @@
 <template>
   <div class="">
     <div class="">
+      File: {{ currentSong.file }} <br>
       Title song: {{ currentSong.Title }} <br>
       Album: {{ currentSong.Album }} <br>
       Groupe: {{ currentSong.Artist }} <br>

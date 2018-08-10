@@ -12,7 +12,6 @@ const currentPlaylist = {
   },
   mutations: {
     SET_PLAYLIST: (state, newPlaylist) => {
-      state.playlist = {}
       state.playlist = newPlaylist
     }
   },
@@ -51,7 +50,6 @@ const currentSong = {
   },
   mutations: {
     SET_SONG: (state, newSong) => {
-      state.song = {}
       state.song = newSong
     },
     SET_ID: (state, newID) => {

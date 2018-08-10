@@ -156,7 +156,8 @@ export default {
         this.connected = true
         if (response.data.state === 'play') {
           this.axios.get('v1/currentSong').then((response) => {
-            if (this.getCurrentSongInfos.Title !== response.data.Title) {
+            // if (this.getCurrentSongInfos.Title !== response.data.Title) {
+            if (this.getCurrentSongInfos.file !== response.data.file) {
               this.axios.get('v1/currentPlaylist').then((response) => {
                 this.setPlaylist(response.data)
               })

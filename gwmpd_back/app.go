@@ -232,6 +232,8 @@ func (e *com) getCurrentSong(c *gin.Context) {
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("currentsong")
 
+	mySong := mpdCurrentSong{}
+
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
@@ -242,21 +244,21 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		first, end := splitLine(&line)
 		switch first {
 		case "Album":
-			e.info.currentSong.Album = end
+			mySong.Album = end
 		case "Artist":
-			e.info.currentSong.Artist = end
+			mySong.Artist = end
 		case "Composer":
 		case "Date":
-			e.info.currentSong.Date = end
+			mySong.Date = end
 		case "duration":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"duration\" %s", end)
 				continue
 			}
-			e.info.currentSong.Duration = f
+			mySong.Duration = f
 		case "file":
-			e.info.currentSong.File = end
+			mySong.File = end
 		case "Genre":
 		case "Id":
 			i, err := strconv.Atoi(end)
@@ -264,30 +266,32 @@ func (e *com) getCurrentSong(c *gin.Context) {
 				log.Warningf("Unable to convert \"Id\" %s", end)
 				continue
 			}
-			e.info.currentSong.Id = i
+			mySong.Id = i
 		case "Last-Modified":
-			e.info.currentSong.LastModified = end
+			mySong.LastModified = end
 		case "Pos":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"Pos\" %s", end)
 				continue
 			}
-			e.info.currentSong.Pos = i
+			mySong.Pos = i
 		case "Title":
-			e.info.currentSong.Title = end
+			mySong.Title = end
 		case "Time":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"volume\" %s", end)
 				continue
 			}
-			e.info.currentSong.Time = i
+			mySong.Time = i
 		case "Track":
 		default:
 			log.Infof("In getCurrentSong, unknown: \"%s\"\n", first)
 		}
 	}
+
+	e.info.currentSong = &mySong
 
 	c.JSON(200, gin.H{
 		"Album":         e.info.currentSong.Album,
@@ -1351,13 +1355,13 @@ func unauthorized(c *gin.Context, code int, message string) {
 }
 
 func main() {
-	confPath := "/etc/gwmpd"
-	confFilename := "gwmpd"
-	logFilename := "/var/log/gwmpd/error.log"
+	// confPath := "/etc/gwmpd"
+	// confFilename := "gwmpd"
+	// logFilename := "/var/log/gwmpd/error.log"
 
-	// confPath := "cfg/"
-	// confFilename := "gwmpd_sample"
-	// logFilename := "error.log"
+	confPath := "cfg/"
+	confFilename := "gwmpd_sample"
+	logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()
