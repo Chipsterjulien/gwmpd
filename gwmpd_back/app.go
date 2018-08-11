@@ -118,14 +118,6 @@ type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
 
-//
-// Regarder pour mettre pleins de protections dans ce style si je rencontre une erreur ACK dans une fonction:
-// else if bytes.Contains(line, []byte("ACK [55@0]")) {
-// 	e.mutex.Unlock()
-// 	c.JSON(200, gin.H{"nextSong": "failed"})
-// 	return
-//
-
 func (e *com) addSongToPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -139,6 +131,11 @@ func (e *com) addSongToPlaylist(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"addSongToPlaylist": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -154,33 +151,6 @@ func (e *com) addSongToPlaylist(c *gin.Context) {
 	}
 }
 
-func (e *com) getAllPlaylists(c *gin.Context) {
-	log := logging.MustGetLogger("log")
-
-	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("listplaylists")
-	playlists := []string{}
-
-	for {
-		line := <-e.cmdToConsumeChan
-		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
-			break
-		}
-
-		first, end := splitLine(&line)
-		switch first {
-		case "playlist":
-			playlists = append(playlists, end)
-		case "Last-Modified":
-		default:
-			log.Infof("In getAllFiles, unknown: \"%s\"\n", first)
-		}
-	}
-
-	c.JSON(200, playlists)
-}
-
 func (e *com) clearPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -194,6 +164,11 @@ func (e *com) clearPlaylist(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"clearPlaylist": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -209,6 +184,38 @@ func (e *com) clearPlaylist(c *gin.Context) {
 	}
 }
 
+func (e *com) getAllPlaylists(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte("listplaylists")
+	playlists := []string{}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"allPlaylists": "failed"})
+
+			return
+		}
+
+		first, end := splitLine(&line)
+		switch first {
+		case "playlist":
+			playlists = append(playlists, end)
+		case "Last-Modified":
+		default:
+			log.Infof("In getAllFiles, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, playlists)
+}
+
 func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -220,6 +227,11 @@ func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"clearCurrentPlaylist": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -230,6 +242,82 @@ func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"clearCurrentPlaylist": "ok"})
+}
+
+func (e *com) getCurrentPlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	e.mutex.Lock()
+	e.sendCmdToMPDChan <- []byte("playlistinfo")
+	e.info.currentPlaylist = []mpdCurrentSong{}
+	mySong := mpdCurrentSong{}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"currentPlaylist": "failed"})
+
+			return
+		}
+
+		first, end := splitLine(&line)
+		switch first {
+		case "Album":
+			mySong.Album = end
+		case "Artist":
+			mySong.Artist = end
+		case "Composer":
+		case "Date":
+			mySong.Date = end
+		case "duration":
+			f, err := strconv.ParseFloat(end, 64)
+			if err != nil {
+				log.Warningf("Unable to convert \"duration\" %s", end)
+				continue
+			}
+			mySong.Duration = f
+		case "file":
+			mySong.File = end
+		case "Genre":
+			mySong.Genre = end
+		case "Id":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Id\" %s", end)
+				continue
+			}
+			mySong.Id = i
+			e.info.currentPlaylist = append(e.info.currentPlaylist, mySong)
+			mySong = mpdCurrentSong{}
+		case "Last-Modified":
+			mySong.LastModified = end
+		case "Pos":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"Pos\" %s", end)
+				continue
+			}
+			mySong.Pos = i
+		case "Time":
+			i, err := strconv.Atoi(end)
+			if err != nil {
+				log.Warningf("Unable to convert \"volume\" %s", end)
+				continue
+			}
+			mySong.Time = i
+		case "Title":
+			mySong.Title = end
+		case "Track":
+		default:
+			log.Infof("In getCurrentPlaylist, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, e.info.currentPlaylist)
 }
 
 func (e *com) getCurrentSong(c *gin.Context) {
@@ -245,6 +333,11 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"currentSong": "failed"})
+
+			return
 		}
 
 		first, end := splitLine(&line)
@@ -332,6 +425,11 @@ func (e *com) getFilesList(c *gin.Context) {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"filesList": "failed"})
+
+			return
 		}
 
 		first, end := splitLine(&line)
@@ -377,6 +475,11 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"loadPlaylist": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -387,32 +490,6 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"loadPlaylist": name})
-}
-
-func (e *com) getPreviousSong(c *gin.Context) {
-	log := logging.MustGetLogger("log")
-
-	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("previous")
-
-	for {
-		line := <-e.cmdToConsumeChan
-		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
-			c.JSON(200, gin.H{"previousSong": "ok"})
-			return
-		} else if bytes.Contains(line, []byte("ACK [55@0]")) {
-			e.mutex.Unlock()
-			c.JSON(200, gin.H{"previousSong": "failed"})
-			return
-		}
-
-		first, _ := splitLine(&line)
-		switch first {
-		default:
-			log.Infof("In getPreviousSong, unknown: \"%s\"\n", first)
-		}
-	}
 }
 
 func (e *com) getNextSong(c *gin.Context) {
@@ -441,27 +518,32 @@ func (e *com) getNextSong(c *gin.Context) {
 	}
 }
 
-func (e *com) getStopSong(c *gin.Context) {
+func (e *com) getPauseSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("stop")
+	e.sendCmdToMPDChan <- []byte("pause")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"pauseSong": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Infof("In getStopSong, unknown: \"%s\"\n", first)
+			log.Infof("In getPauseSong, unknown: \"%s\"\n", first)
 		}
 	}
 
-	c.JSON(200, gin.H{"stopSong": "ok"})
+	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
 func (e *com) getPlaylistSongsList(c *gin.Context) {
@@ -484,6 +566,11 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"playlistSongsList": "failed"})
+
+			return
 		}
 
 		first, end := splitLine(&line)
@@ -557,6 +644,11 @@ func (e *com) getPlaySong(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"playSong": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -569,98 +661,58 @@ func (e *com) getPlaySong(c *gin.Context) {
 	c.JSON(200, gin.H{"playSong": "ok"})
 }
 
-func (e *com) getPauseSong(c *gin.Context) {
+func (e *com) getPreviousSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("pause")
+	e.sendCmdToMPDChan <- []byte("previous")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
-			break
+			c.JSON(200, gin.H{"previousSong": "ok"})
+			return
+		} else if bytes.Contains(line, []byte("ACK [55@0]")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"previousSong": "failed"})
+			return
 		}
 
 		first, _ := splitLine(&line)
 		switch first {
 		default:
-			log.Infof("In getPauseSong, unknown: \"%s\"\n", first)
+			log.Infof("In getPreviousSong, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
-func (e *com) getCurrentPlaylist(c *gin.Context) {
+func (e *com) getStopSong(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	e.sendCmdToMPDChan <- []byte("playlistinfo")
-	e.info.currentPlaylist = []mpdCurrentSong{}
-	mySong := mpdCurrentSong{}
+	e.sendCmdToMPDChan <- []byte("stop")
 
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"stopSong": "failed"})
+
+			return
 		}
 
-		first, end := splitLine(&line)
+		first, _ := splitLine(&line)
 		switch first {
-		case "Album":
-			mySong.Album = end
-		case "Artist":
-			mySong.Artist = end
-		case "Composer":
-		case "Date":
-			mySong.Date = end
-		case "duration":
-			f, err := strconv.ParseFloat(end, 64)
-			if err != nil {
-				log.Warningf("Unable to convert \"duration\" %s", end)
-				continue
-			}
-			mySong.Duration = f
-		case "file":
-			mySong.File = end
-		case "Genre":
-			mySong.Genre = end
-		case "Id":
-			i, err := strconv.Atoi(end)
-			if err != nil {
-				log.Warningf("Unable to convert \"Id\" %s", end)
-				continue
-			}
-			mySong.Id = i
-			e.info.currentPlaylist = append(e.info.currentPlaylist, mySong)
-			mySong = mpdCurrentSong{}
-		case "Last-Modified":
-			mySong.LastModified = end
-		case "Pos":
-			i, err := strconv.Atoi(end)
-			if err != nil {
-				log.Warningf("Unable to convert \"Pos\" %s", end)
-				continue
-			}
-			mySong.Pos = i
-		case "Time":
-			i, err := strconv.Atoi(end)
-			if err != nil {
-				log.Warningf("Unable to convert \"volume\" %s", end)
-				continue
-			}
-			mySong.Time = i
-		case "Title":
-			mySong.Title = end
-		case "Track":
 		default:
-			log.Infof("In getCurrentPlaylist, unknown: \"%s\"\n", first)
+			log.Infof("In getStopSong, unknown: \"%s\"\n", first)
 		}
 	}
 
-	c.JSON(200, e.info.currentPlaylist)
+	c.JSON(200, gin.H{"stopSong": "ok"})
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
@@ -675,6 +727,11 @@ func (e *com) getStatusMPD(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"statusMPD": "failed"})
+
+			return
 		}
 
 		first, end := splitLine(&line)
@@ -833,6 +890,11 @@ func (e *com) moveSong(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"moveSong": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -861,6 +923,11 @@ func (e *com) removePlaylist(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"removePlaylist": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -889,6 +956,11 @@ func (e *com) removeSong(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"removeSong": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -917,6 +989,11 @@ func (e *com) renamePlaylist(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"renamePlaylist": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -945,6 +1022,11 @@ func (e *com) savePlaylist(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"savePlaylist": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -974,6 +1056,11 @@ func (e *com) setVolume(c *gin.Context) {
 			if bytes.Equal(line, []byte("OK")) {
 				e.mutex.Unlock()
 				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"setVolume": "failed"})
+
+				return
 			}
 
 			first, _ := splitLine(&line)
@@ -1000,6 +1087,11 @@ func (e *com) shuffle(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"shuffle": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1029,6 +1121,11 @@ func (e *com) toggleConsume(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"toggleConsume": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1058,6 +1155,11 @@ func (e *com) toggleRandom(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"toggleRandom": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1087,6 +1189,11 @@ func (e *com) toggleRepeat(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"toggleRepeat": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1116,6 +1223,11 @@ func (e *com) toggleSingle(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"toggleSingle": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1146,6 +1258,11 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"toggleMuteVolume": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1169,6 +1286,11 @@ func (e *com) updateDB(c *gin.Context) {
 		if bytes.Equal(line, []byte("OK")) {
 			e.mutex.Unlock()
 			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"updateDB": "failed"})
+
+			return
 		}
 
 		first, _ := splitLine(&line)
@@ -1454,15 +1576,16 @@ func eventManagement(com *com) {
 
 			past = time.Now()
 			lineSplitted := strings.Split(string(line), " ")
+			// ------ partie à supprimer
 			if len(lineSplitted) > 2 && lineSplitted[0] == "ACK" {
 				switch lineSplitted[1] {
 				case "[50@0]":
 				case "[55@0]":
 				default:
 					log.Criticalf("Unkwnow ACK: %s\n", line)
-					// os.Exit(1)
 				}
 			}
+			// ------
 			com.cmdToConsumeChan <- line
 		}
 	}
