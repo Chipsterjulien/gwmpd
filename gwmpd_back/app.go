@@ -21,9 +21,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Pour les commandes mpd via le socket:
-// https://www.musicpd.org/doc/protocol/command_reference.html
-
 type com struct {
 	cmdToConsumeChan chan []byte
 	mpdResponseChan  chan []byte
@@ -48,6 +45,7 @@ type mpdCurrentSong struct {
 	Genre        string
 	Id           int
 	LastModified string
+	Name         string
 	Pos          int
 	Time         int
 	Title        string
@@ -120,6 +118,14 @@ type volumeForm struct {
 	Volume int `form:"volume" binding:"required"`
 }
 
+//
+// Regarder pour mettre pleins de protections dans ce style si je rencontre une erreur ACK dans une fonction:
+// else if bytes.Contains(line, []byte("ACK [55@0]")) {
+// 	e.mutex.Unlock()
+// 	c.JSON(200, gin.H{"nextSong": "failed"})
+// 	return
+//
+
 func (e *com) addSongToPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
@@ -182,7 +188,7 @@ func (e *com) clearPlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlist); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- append([]byte("playlistclear "), []byte(playlist.PlaylistName)...)
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistclear \"%s\"", playlist.PlaylistName))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
@@ -269,6 +275,8 @@ func (e *com) getCurrentSong(c *gin.Context) {
 			mySong.Id = i
 		case "Last-Modified":
 			mySong.LastModified = end
+		case "Name":
+			mySong.Name = end
 		case "Pos":
 			i, err := strconv.Atoi(end)
 			if err != nil {
@@ -301,6 +309,7 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		"file":          e.info.currentSong.File,
 		"Id":            e.info.currentSong.Id,
 		"Last-Modified": e.info.currentSong.LastModified,
+		"Name":          e.info.currentSong.Name,
 		"Pos":           e.info.currentSong.Pos,
 		"Title":         e.info.currentSong.Title,
 		"Time":          e.info.currentSong.Time,
@@ -459,13 +468,13 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
 	e.mutex.Lock()
-	name := c.DefaultQuery("name", "")
+	name := c.DefaultQuery("playlistName", "")
 	if name == "" {
 		e.mutex.Unlock()
 		return
 	}
 
-	e.sendCmdToMPDChan <- append([]byte("listplaylistinfo "), []byte(name)...)
+	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("listplaylistinfo \"%s\"", name))
 
 	playlist := []mpdCurrentSong{}
 	mySong := mpdCurrentSong{}
@@ -497,6 +506,16 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 			mySong = mpdCurrentSong{}
 		case "file":
 			mySong.File = end
+			for _, protocol := range strings.Split("http:// https:// mms:// mmsh:// mmst:// mmsu:// gopher:// rtp:// rtsp:// rtmp:// rtmpt:// rtmps:// cdda:// alsa:// qobuz:// tidal://", " ") {
+				if strings.HasPrefix(end, protocol) {
+					playlist = append(playlist, mySong)
+					mySong = mpdCurrentSong{}
+					break
+				}
+			}
+			// // file:// http:// https:// mms:// mmsh:// mmst:// mmsu:// gopher:// rtp:// rtsp:// rtmp:// rtmpt:// rtmps:// smb:// nfs:// cdda:// alsa:// qobuz:// tidal://
+			// if strings.HasPrefix(end, "http://") || strings.HasPrefix(end, "https://") || strings.HasPrefix(end, "rtsp://") {
+			// }
 		case "Genre":
 			mySong.Genre = end
 		case "Last-Modified":
@@ -515,6 +534,9 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 			log.Infof("In getPlaylistSongsList, unknown: \"%s\"\n", first)
 		}
 	}
+
+	// fmt.Println(playlist)
+	// os.Exit(0)
 
 	c.JSON(200, playlist)
 }
@@ -801,7 +823,7 @@ func (e *com) moveSong(c *gin.Context) {
 
 	if err := c.ShouldBind(&song); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistmove %s %d %d",
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistmove \"%s\" %d %d",
 			song.PlaylistName,
 			song.OldPos,
 			song.NewPos,
@@ -833,7 +855,6 @@ func (e *com) removePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		// e.sendCmdToMPDChan <- append([]byte("rm "), []byte(playlistName.PlaylistName)...)
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rm \"%s\"", playlistName.PlaylistName))
 		for {
 			line := <-e.cmdToConsumeChan
@@ -862,7 +883,7 @@ func (e *com) removeSong(c *gin.Context) {
 
 	if err := c.ShouldBind(&song); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistdelete %s %d", song.PlaylistName, song.Pos))
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("playlistdelete \"%s\" \"%d\"", song.PlaylistName, song.Pos))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
@@ -890,7 +911,7 @@ func (e *com) renamePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&name); err == nil {
 		e.mutex.Lock()
-		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rename %s %s", name.OldName, name.NewName))
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("rename \"%s\" \"%s\"", name.OldName, name.NewName))
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
@@ -918,7 +939,6 @@ func (e *com) savePlaylist(c *gin.Context) {
 
 	if err := c.ShouldBind(&playlistName); err == nil {
 		e.mutex.Lock()
-		// e.sendCmdToMPDChan <- append([]byte("save \""), []byte(playlistName.PlaylistName), []byte("\"")...)
 		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("save \"%s\"", playlistName.PlaylistName))
 		for {
 			line := <-e.cmdToConsumeChan
@@ -1355,13 +1375,13 @@ func unauthorized(c *gin.Context, code int, message string) {
 }
 
 func main() {
-	confPath := "/etc/gwmpd"
-	confFilename := "gwmpd"
-	logFilename := "/var/log/gwmpd/error.log"
+	// confPath := "/etc/gwmpd"
+	// confFilename := "gwmpd"
+	// logFilename := "/var/log/gwmpd/error.log"
 
-	// confPath := "cfg/"
-	// confFilename := "gwmpd_sample"
-	// logFilename := "error.log"
+	confPath := "cfg/"
+	confFilename := "gwmpd_sample"
+	logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()

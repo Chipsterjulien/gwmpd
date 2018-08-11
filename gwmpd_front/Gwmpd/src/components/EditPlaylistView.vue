@@ -20,11 +20,13 @@
       <table v-if="playlist.length">
         <tr>
           <th>#</th>
+          <th>File</th>
           <th>Song's name</th>
           <th>Duration</th>
         </tr>
         <tr v-for="(k, v) in playlist" :key="v">
           <td>{{ v + 1 }}</td>
+          <td>{{ k.File }}</td>
           <td>{{ k.Title }}</td>
           <td>{{ k.Time }}</td>
           <td><button type="button" v-if="v !== 0" @click="moveTop(v)">Top</button></td>
@@ -162,7 +164,7 @@ export default {
       this.axios.post('v1/moveSong', {
         playlistName: this.playlistName,
         oldPos: actualPos,
-        newPos: this.playlist.length + 1
+        newPos: actualPos + 1
       })
         .then(response => {
           this.getPlaylist()
@@ -172,7 +174,7 @@ export default {
       this.axios.post('v1/moveSong', {
         playlistName: this.playlistName,
         oldPos: actualPos,
-        newPos: this.playlist.length - 1
+        newPos: actualPos - 1
       })
         .then(response => {
           this.getPlaylist()
