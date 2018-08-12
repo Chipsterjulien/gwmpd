@@ -8,14 +8,6 @@
         <router-link :to="{ name: 'AboutView', params: {} }">About</router-link>
       </div>
       <div class="">
-        <div class="" v-if="getConnectionStatus">
-          Connected
-        </div>
-        <div class="" v-else>
-          Disconnected
-        </div>
-      </div>
-      <div class="">
         <button type="button" name="previousSong" @click="previousSong">Previous</button>
         <button type="button" name="stopSong" @click="stopSong">Stop</button>
         <button type="button" name="playSong" @click="playSong" v-if="!songPlayed">Play</button>
@@ -36,6 +28,9 @@
       <div class="" v-if="getStatus.error !== ''">
         Error: {{ getStatus.error }}
       </div>
+    </div>
+    <div class="" v-else>
+      {{ appName }} is disconnected !
     </div>
     <router-view/>
     <router-view name="SideBar"/>
@@ -140,7 +135,8 @@ export default {
     }
   },
   mounted () {
-    console.log('mounted app.vue')
+    // console.log('mounted app.vue')
+    console.log('coin coin coin, je suis déjà monté')
 
     if (this.$auth.watch.authenticated) {
       // refresh token if F5 was sent
@@ -154,7 +150,6 @@ export default {
     this.$refreshMpdDataInterval = setInterval(() => {
       this.axios.get('v1/statusMPD').then((response) => {
         this.setAllStatus(response.data)
-        // this.connected = true
         this.setConnectionStatus(true)
         if (response.data.state === 'play') {
           this.axios.get('v1/currentSong').then((response) => {
@@ -170,7 +165,6 @@ export default {
           this.songPlayed = false
         }
       }, (response) => {
-        // this.connected = false
         this.setConnectionStatus(false)
       })
     }, 1000)

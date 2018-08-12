@@ -37,7 +37,7 @@ export default {
           username: this.user,
           password: this.password
         },
-        redirect: {name: redirect ? redirect.from.name : 'HelloWorld'},
+        redirect: {name: redirect ? redirect.from.name : 'QueueView'},
         rememberMe: this.data.rememberMe,
         fetchUser: this.data.fetchUser,
         success (response) {
