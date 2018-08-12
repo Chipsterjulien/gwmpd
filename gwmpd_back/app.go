@@ -90,53 +90,6 @@ func initGin(com *com) {
 	}
 }
 
-// func getSongInfos(e *com, song *mpdCurrentSong, location *string, songFile *string) error {
-// 	log := logging.MustGetLogger("log")
-//
-// 	e.sendCmdToMPDChan <- []byte(fmt.Sprintf("lsinfo \"%s\"", path.Join(*location, *songFile)))
-//
-// 	for {
-// 		line := <-e.cmdToConsumeChan
-// 		if bytes.Equal(line, []byte("OK")) {
-// 			return nil
-// 		} else if bytes.Contains(line, []byte("ACK [50@0]")) {
-// 			return errors.New(string(line))
-// 		}
-//
-// 		first, end := splitLine(&line)
-// 		switch first {
-// 		case "Album":
-// 			(*song).Album = end
-// 		case "Artist":
-// 			(*song).Artist = end
-// 		case "Composer":
-// 		case "Date":
-// 		case "duration":
-// 			f, err := strconv.ParseFloat(end, 64)
-// 			if err != nil {
-// 				log.Warningf("Unable to convert \"duration\" %s", end)
-// 				continue
-// 			}
-// 			(*song).Duration = f
-// 		case "file":
-// 		case "Genre":
-// 		case "Last-Modified":
-// 		case "Title":
-// 			(*song).Title = end
-// 		case "Time":
-// 			i, err := strconv.Atoi(end)
-// 			if err != nil {
-// 				log.Warningf("Unable to convert \"volume\" %s", end)
-// 				continue
-// 			}
-// 			(*song).Time = i
-// 		case "Track":
-// 		default:
-// 			log.Infof("In getSongInfos, unknown: \"%s\"\n", first)
-// 		}
-// 	}
-// }
-
 func initMPDSocket() net.Conn {
 	log := logging.MustGetLogger("log")
 
@@ -178,13 +131,13 @@ func startApp() {
 }
 
 func main() {
-	// confPath := "/etc/gwmpd"
-	// confFilename := "gwmpd"
-	// logFilename := "/var/log/gwmpd/error.log"
+	confPath := "/etc/gwmpd"
+	confFilename := "gwmpd"
+	logFilename := "/var/log/gwmpd/error.log"
 
-	confPath := "cfg/"
-	confFilename := "gwmpd_sample"
-	logFilename := "error.log"
+	// confPath := "cfg/"
+	// confFilename := "gwmpd_sample"
+	// logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()
