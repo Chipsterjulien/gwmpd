@@ -66,11 +66,23 @@ const currentSong = {
   }
 }
 
-const stat = {
-  state: {},
-  getters: {},
-  mutations: {},
-  actions: {}
+const connectionStatus = {
+  state: {
+    status: {}
+  },
+  getters: {
+    getConnectionStatus: state => state.status
+  },
+  mutations: {
+    SET_CONNECTION_STATUS: (state, newStatus) => {
+      state.status = newStatus
+    }
+  },
+  actions: {
+    setConnectionStatus: ({state, commit}, newStatus) => {
+      commit('SET_CONNECTION_STATUS', newStatus)
+    }
+  }
 }
 
 const status = {
@@ -133,7 +145,8 @@ export default new Vuex.Store({
     allPlaylists: allPlaylists,
     currentPlaylist: currentPlaylist,
     currentSong: currentSong,
-    stat: stat,
+    // stat: stat,
+    connectionStatus: connectionStatus,
     status: status
   },
   strict: true

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="" v-if="connected">
+    <div class="" v-if="getConnectionStatus">
       <div class="TopBar">
         {{ appName }}
         <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
@@ -8,7 +8,7 @@
         <router-link :to="{ name: 'AboutView', params: {} }">About</router-link>
       </div>
       <div class="">
-        <div class="" v-if="connected">
+        <div class="" v-if="getConnectionStatus">
           Connected
         </div>
         <div class="" v-else>
@@ -49,14 +49,14 @@ export default {
   data () {
     return {
       appName: 'Gwmpd',
-      connected: false,
       songPlayed: false
     }
   },
   computed: {
     ...mapGetters({
-      getStatus: 'getStatusInfos',
-      getCurrentSongInfos: 'getCurrentSongInfos'
+      getConnectionStatus: 'getConnectionStatus',
+      getCurrentSongInfos: 'getCurrentSongInfos',
+      getStatus: 'getStatusInfos'
     })
   },
   methods: {
@@ -73,6 +73,7 @@ export default {
     },
     ...mapActions([
       'setAllStatus',
+      'setConnectionStatus',
       'setSong',
       'setVolume',
       'setPlaylist',
@@ -153,7 +154,8 @@ export default {
     this.$refreshMpdDataInterval = setInterval(() => {
       this.axios.get('v1/statusMPD').then((response) => {
         this.setAllStatus(response.data)
-        this.connected = true
+        // this.connected = true
+        this.setConnectionStatus(true)
         if (response.data.state === 'play') {
           this.axios.get('v1/currentSong').then((response) => {
             if (this.getCurrentSongInfos.file !== response.data.file) {
@@ -168,7 +170,8 @@ export default {
           this.songPlayed = false
         }
       }, (response) => {
-        this.connected = false
+        // this.connected = false
+        this.setConnectionStatus(false)
       })
     }, 1000)
   }

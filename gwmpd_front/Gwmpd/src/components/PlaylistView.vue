@@ -1,5 +1,5 @@
 <template lang="html">
-  <div class="">
+  <div class="" v-if="getConnectionStatus">
     <br>
     <br>
 
@@ -34,7 +34,8 @@ export default {
   },
   computed: {
     ...mapGetters({
-      allPlaylists: 'getAllPlaylists'
+      allPlaylists: 'getAllPlaylists',
+      getConnectionStatus: 'getConnectionStatus'
     })
   },
   methods: {

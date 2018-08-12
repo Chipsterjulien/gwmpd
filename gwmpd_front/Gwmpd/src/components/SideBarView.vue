@@ -1,5 +1,5 @@
 <template lang="html">
-  <div class="">
+  <div class="" v-if="getConnectionStatus">
     <br>
     <input type="checkbox" :checked="status.consume" @change="toggleConsume">Consume<br>
     <input type="checkbox" :checked="status.random" @change="toggleRandom">Random<br>
@@ -22,6 +22,7 @@ export default {
   },
   computed: {
     ...mapGetters({
+      getConnectionStatus: 'getConnectionStatus',
       status: 'getStatusInfos'
     })
   },

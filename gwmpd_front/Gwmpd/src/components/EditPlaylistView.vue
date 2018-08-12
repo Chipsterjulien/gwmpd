@@ -1,5 +1,5 @@
 <template lang="html">
-  <div class="">
+  <div class="" v-if="getConnectionStatus">
     <br>
     <br>
     Nom: {{ playlistName }}
@@ -75,6 +75,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 export default {
   name: 'EditPlaylistView',
   data () {
@@ -91,6 +92,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters({
+      getConnectionStatus: 'getConnectionStatus'
+    })
   },
   methods: {
     addSongToPlaylist (filename) {

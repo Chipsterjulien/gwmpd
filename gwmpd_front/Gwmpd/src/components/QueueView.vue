@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div class="" v-if="getConnectionStatus">
     <div class="">
       File: {{ currentSong.file }} <br>
       Title song: {{ currentSong.Title }} <br>
@@ -43,9 +43,10 @@ export default {
   },
   computed: {
     ...mapGetters({
+      currentPlaylist: 'getCurrentPlaylist',
       currentSong: 'getCurrentSongInfos',
-      status: 'getStatusInfos',
-      currentPlaylist: 'getCurrentPlaylist'
+      getConnectionStatus: 'getConnectionStatus',
+      status: 'getStatusInfos'
     })
   },
   methods: {
