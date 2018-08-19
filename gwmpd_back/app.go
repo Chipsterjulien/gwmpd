@@ -71,6 +71,7 @@ func initGin(com *com) {
 		auth.POST("/removeSong", com.removeSong)
 		auth.POST("/renamePlaylist", com.renamePlaylist)
 		auth.POST("/savePlaylist", com.savePlaylist)
+		auth.POST("/setPositionTimeInCurrentSong", com.setPositionTimeInCurrentSong)
 		auth.POST("/setVolume", com.setVolume)
 		auth.GET("/shuffle", com.shuffle)
 		auth.GET("/statusMPD", com.getStatusMPD)
@@ -131,13 +132,13 @@ func startApp() {
 }
 
 func main() {
-	confPath := "/etc/gwmpd"
-	confFilename := "gwmpd"
-	logFilename := "/var/log/gwmpd/error.log"
+	// confPath := "/etc/gwmpd"
+	// confFilename := "gwmpd"
+	// logFilename := "/var/log/gwmpd/error.log"
 
-	// confPath := "cfg/"
-	// confFilename := "gwmpd_sample"
-	// logFilename := "error.log"
+	confPath := "cfg/"
+	confFilename := "gwmpd_sample"
+	logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()

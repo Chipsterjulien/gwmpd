@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="" v-if="getConnectionStatus">
+    <div class="" v-if="getConnectionStatus === true">
       <div class="TopBar">
         {{ appName }}
         <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
@@ -44,6 +44,7 @@ export default {
   data () {
     return {
       appName: 'Gwmpd',
+      connected: false,
       songPlayed: false
     }
   },
@@ -135,9 +136,6 @@ export default {
     }
   },
   mounted () {
-    // console.log('mounted app.vue')
-    console.log('coin coin coin, je suis déjà monté')
-
     if (this.$auth.watch.authenticated) {
       // refresh token if F5 was sent
       this.refresh()

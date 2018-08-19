@@ -1,5 +1,5 @@
 <template lang="html">
-  <div class="" v-if="getConnectionStatus">
+  <div class="" v-if="getConnectionStatus === true">
     <br>
     <input type="checkbox" :checked="status.consume" @change="toggleConsume">Consume<br>
     <input type="checkbox" :checked="status.random" @change="toggleRandom">Random<br>

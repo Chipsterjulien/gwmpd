@@ -99,6 +99,9 @@ const status = {
     SET_CONSUME: (state, newConsume) => {
       state.status.consume = newConsume
     },
+    SET_POSITION: (state, newPosition) => {
+      state.status.elapsed = Math.round(newPosition * 100) / 100
+    },
     SET_RANDOM: (state, newRandom) => {
       state.status.random = newRandom
     },
@@ -121,6 +124,9 @@ const status = {
     },
     setConsume: ({state, commit}, newConsume) => {
       commit('SET_CONSUME', newConsume)
+    },
+    setPosition: ({state, commit}, newPosition) => {
+      commit('SET_POSITION', newPosition)
     },
     setRandom: ({state, commit}, newRandom) => {
       commit('SET_RANDOM', newRandom)

@@ -1,5 +1,5 @@
 <template lang="html">
-  <div class="" v-if="getConnectionStatus">
+  <div class="" v-if="getConnectionStatus === true">
     <br>
     <br>
 

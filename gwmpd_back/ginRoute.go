@@ -934,6 +934,47 @@ func (e *com) savePlaylist(c *gin.Context) {
 	}
 }
 
+func (e *com) setPositionTimeInCurrentSong(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	var seek seekForm
+
+	c.ShouldBind(&seek)
+	e.mutex.Lock()
+
+	if seek.Position <= 0 {
+		e.sendCmdToMPDChan <- []byte("seekcur 0")
+		e.info.status.Elapsed = 0
+	} else if seek.Position > e.info.status.Duration {
+		e.sendCmdToMPDChan <- []byte("next")
+		e.info.status.Elapsed = e.info.status.Duration
+	} else {
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("seekcur %f", seek.Position))
+		e.info.status.Elapsed = seek.Position
+	}
+
+	for {
+		line := <-e.cmdToConsumeChan
+		if bytes.Equal(line, []byte("OK")) {
+			e.mutex.Unlock()
+			break
+		} else if bytes.Contains(line, []byte("ACK")) {
+			e.mutex.Unlock()
+			c.JSON(200, gin.H{"setPosition": "failed"})
+
+			return
+		}
+
+		first, _ := splitLine(&line)
+		switch first {
+		default:
+			log.Infof("In setPositionTimeInCurrentSong, unknown: \"%s\"\n", first)
+		}
+	}
+
+	c.JSON(200, gin.H{"setPosition": "ok", "position": e.info.status.Elapsed})
+}
+
 func (e *com) setVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 

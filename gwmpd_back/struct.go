@@ -89,6 +89,10 @@ type renamePlaylistForm struct {
 	NewName string `form:"newName" json:"newName" binding:"required"`
 }
 
+type seekForm struct {
+	Position float64 `form:"position" json:"position" binding:"required"`
+}
+
 type songForm struct {
 	PlaylistName string `form:"playlistName" json:"playlistName" binding:"required"`
 	OldPos       int    `form:"oldPos" json:"oldPos" binding:"exists"`

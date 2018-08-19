@@ -1,12 +1,21 @@
 <template>
-  <div class="" v-if="getConnectionStatus">
+  <div class="" v-if="getConnectionStatus === true">
     <div class="">
       File: {{ currentSong.file }} <br>
       Title song: {{ currentSong.Title }} <br>
       Album: {{ currentSong.Album }} <br>
       Groupe: {{ currentSong.Artist }} <br>
       Consommé: {{ status.elapsed }}s <br>
-      Temps total: {{ currentSong.Time }}s <br>
+      Temps total: {{ status.duration }}s <br>
+    </div>
+    <br>
+    <br>
+    <div class="" v-if="status.duration !== 0">
+      Temps total: {{ status.duration }}<br>
+      <input type="range" min="0" :max="status.duration" v-model.number="sliderValue"><br>
+      SliderValue: {{ sliderValue }}<br>
+      <button type="button" @click="moveBackwardsInTime">-10s</button>
+      <button type="button" @click="moveForwardInTime">+10s</button>
     </div>
     <br>
     <br>
@@ -39,6 +48,7 @@ export default {
   name: 'QueueView',
   data () {
     return {
+      connected: false
     }
   },
   computed: {
@@ -47,11 +57,24 @@ export default {
       currentSong: 'getCurrentSongInfos',
       getConnectionStatus: 'getConnectionStatus',
       status: 'getStatusInfos'
-    })
+    }),
+    sliderValue: {
+      get: function () {
+        return this.status.elapsed
+      },
+      set: function (timePosition) {
+        this.setPosition(timePosition)
+        this.axios.post('v1/setPositionTimeInCurrentSong', {position: timePosition})
+          .then(response => {
+            this.setPosition(timePosition)
+          })
+      }
+    }
   },
   methods: {
     ...mapActions([
       'setPlaylist',
+      'setPosition',
       'setState',
       'setID'
     ]),
@@ -64,6 +87,33 @@ export default {
             this.songPlayed = true
           }
         })
+    },
+    moveBackwardsInTime () {
+      var timePosition = this.status.elapsed - 10
+
+      if (timePosition <= 0) {
+        this.axios.post('v1/setPositionTimeInCurrentSong', {position: 0})
+          .then(response => {
+            this.setPosition(0)
+          })
+      } else {
+        this.axios.post('v1/setPositionTimeInCurrentSong', {position: timePosition})
+          .then(response => {
+            this.setPosition(timePosition)
+          })
+      }
+    },
+    moveForwardInTime () {
+      var timePosition = this.status.elapsed + 10
+
+      if (timePosition > this.status.duration) {
+        this.axios.get('v1/nextSong')
+      } else {
+        this.axios.post('v1/setPositionTimeInCurrentSong', {position: timePosition})
+          .then(response => {
+            this.setPosition(timePosition)
+          })
+      }
     }
   },
   mounted () {
