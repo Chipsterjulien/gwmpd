@@ -32,7 +32,7 @@
           <td>{{ k.File }}</td>
           <td>{{ k.Title }}</td>
           <td>{{ k.Time }}</td>
-          <td v-if="currentSong.Id !== k.ID"><button @click="playSong(k.Id, k.Pos)">play</button></td>
+          <td v-if="currentSong.Id !== k.ID"><button @click="playSong(k.ID, k.Pos)">play</button></td>
         </tr>
       </table>
     </div>
