@@ -514,9 +514,6 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 		}
 	}
 
-	// fmt.Println(playlist)
-	// os.Exit(0)
-
 	c.JSON(200, playlist)
 }
 
@@ -612,7 +609,8 @@ func (e *com) getStatusMPD(c *gin.Context) {
 
 	e.mutex.Lock()
 	e.sendCmdToMPDChan <- []byte("status")
-	errorIsNotDefine := true
+
+	myStatus := mpdStatus{}
 
 	for {
 		line := <-e.cmdToConsumeChan
@@ -629,14 +627,14 @@ func (e *com) getStatusMPD(c *gin.Context) {
 		first, end := splitLine(&line)
 		switch first {
 		case "audio":
-			e.info.status.Audio = end
+			myStatus.Audio = end
 		case "bitrate":
-			e.info.status.Bitrate = end
+			myStatus.Bitrate = end
 		case "consume":
 			if end == "1" {
-				e.info.status.Consume = true
+				myStatus.Consume = true
 			} else {
-				e.info.status.Consume = false
+				myStatus.Consume = false
 			}
 		case "duration":
 			f, err := strconv.ParseFloat(end, 64)
@@ -644,55 +642,54 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				log.Warningf("Unable to convert \"duration\" %s", end)
 				continue
 			}
-			e.info.status.Duration = f
+			myStatus.Duration = f
 		case "elapsed":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"elapsed\" %s", end)
 				continue
 			}
-			e.info.status.Elapsed = f
+			myStatus.Elapsed = f
 		case "error":
-			errorIsNotDefine = false
-			e.info.status.Error = end
+			myStatus.Error = end
 		case "mixrampdb":
 			f, err := strconv.ParseFloat(end, 64)
 			if err != nil {
 				log.Warningf("Unable to convert \"mixrampdb\" %s", end)
 				continue
 			}
-			e.info.status.MixrampDB = f
+			myStatus.MixrampDB = f
 		case "playlist":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"playlist\" %s", end)
 				continue
 			}
-			e.info.status.Playlist = i
+			myStatus.Playlist = i
 		case "playlistlength":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"playlistlength\" %s", end)
 				continue
 			}
-			e.info.status.PlaylistLength = i
+			myStatus.PlaylistLength = i
 		case "random":
 			if end == "1" {
-				e.info.status.Random = true
+				myStatus.Random = true
 			} else {
-				e.info.status.Random = false
+				myStatus.Random = false
 			}
 		case "repeat":
 			if end == "1" {
-				e.info.status.Repeat = true
+				myStatus.Repeat = true
 			} else {
-				e.info.status.Repeat = false
+				myStatus.Repeat = false
 			}
 		case "single":
 			if end == "1" {
-				e.info.status.Single = true
+				myStatus.Single = true
 			} else {
-				e.info.status.Single = false
+				myStatus.Single = false
 			}
 		case "song":
 			i, err := strconv.Atoi(end)
@@ -700,7 +697,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				log.Warningf("Unable to convert \"song\" %s", end)
 				continue
 			}
-			e.info.status.Song = i
+			myStatus.Song = i
 		case "songid":
 			i, err := strconv.Atoi(end)
 			if err != nil {
@@ -708,40 +705,38 @@ func (e *com) getStatusMPD(c *gin.Context) {
 				log.Warningf("Unable to convert \"songid\" %s", end)
 				continue
 			}
-			e.info.status.SongID = i
+			myStatus.SongID = i
 		case "nextsong":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"nextsong\" %s", end)
 				continue
 			}
-			e.info.status.NextSong = i
+			myStatus.NextSong = i
 		case "nextsongid":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"nextsongid\" %s", end)
 				continue
 			}
-			e.info.status.NextSongID = i
+			myStatus.NextSongID = i
 		case "state":
-			e.info.status.State = end
+			myStatus.State = end
 		case "time":
-			e.info.status.Time = end
+			myStatus.Time = end
 		case "volume":
 			i, err := strconv.Atoi(end)
 			if err != nil {
 				log.Warningf("Unable to convert \"volume\" %s", end)
 				continue
 			}
-			e.info.status.Volume = i
+			myStatus.Volume = i
 		default:
 			log.Infof("In getStatusMPD, unknown: \"%s\"\n", first)
 		}
 	}
 
-	if errorIsNotDefine {
-		e.info.status.Error = ""
-	}
+	e.info.status = &myStatus
 
 	c.JSON(200, gin.H{
 		"audio":          e.info.status.Audio,
