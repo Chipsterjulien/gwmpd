@@ -24,7 +24,7 @@ type mpdCurrentSong struct {
 	Duration     float64
 	File         string
 	Genre        string
-	Id           int
+	ID           int
 	LastModified string
 	Name         string
 	Pos          int

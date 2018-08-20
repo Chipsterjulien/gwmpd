@@ -86,7 +86,7 @@ func initGin(com *com) {
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
 	if err := g.Run(":" + strconv.Itoa(viper.GetInt("ginserver.port"))); err != nil {
-		log.Criticalf("Unable to start serveur: %s", err)
+		log.Criticalf("Unable to start server: %s", err)
 		os.Exit(1)
 	}
 }

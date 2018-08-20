@@ -75,17 +75,6 @@ func eventManagement(com *com) {
 			log.Debugf("> %s\n", string(line))
 
 			past = time.Now()
-			// ------ partie à supprimer
-			// lineSplitted := strings.Split(string(line), " ")
-			// if len(lineSplitted) > 2 && lineSplitted[0] == "ACK" {
-			// 	switch lineSplitted[1] {
-			// 	case "[50@0]":
-			// 	case "[55@0]":
-			// 	default:
-			// 		log.Criticalf("Unkwnow ACK: %s\n", line)
-			// 	}
-			// }
-			// ------
 			com.cmdToConsumeChan <- line
 		}
 	}

@@ -182,7 +182,7 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 				log.Warningf("Unable to convert \"Id\" %s", end)
 				continue
 			}
-			mySong.Id = i
+			mySong.ID = i
 			e.info.currentPlaylist = append(e.info.currentPlaylist, mySong)
 			mySong = mpdCurrentSong{}
 		case "Last-Modified":
@@ -257,7 +257,7 @@ func (e *com) getCurrentSong(c *gin.Context) {
 				log.Warningf("Unable to convert \"Id\" %s", end)
 				continue
 			}
-			mySong.Id = i
+			mySong.ID = i
 		case "Last-Modified":
 			mySong.LastModified = end
 		case "Name":
@@ -292,7 +292,7 @@ func (e *com) getCurrentSong(c *gin.Context) {
 		"Date":          e.info.currentSong.Date,
 		"duration":      e.info.currentSong.Duration,
 		"file":          e.info.currentSong.File,
-		"Id":            e.info.currentSong.Id,
+		"Id":            e.info.currentSong.ID,
 		"Last-Modified": e.info.currentSong.LastModified,
 		"Name":          e.info.currentSong.Name,
 		"Pos":           e.info.currentSong.Pos,
