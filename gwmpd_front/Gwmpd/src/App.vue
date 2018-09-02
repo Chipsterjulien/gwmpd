@@ -1,6 +1,10 @@
 <template>
   <div id="app">
     <div class="" v-if="getConnectionStatus === true">
+      <b-navbar toggleable="md" variant="info" type="dark">
+        <b-navbar-brand>{{ appName }}</b-navbar-brand>
+      </b-navbar>
+
       <div class="TopBar">
         {{ appName }}
         <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
@@ -30,7 +34,10 @@
       </div>
     </div>
     <div class="" v-else>
-      {{ appName }} is disconnected !
+      <b-alert show variant="warning">
+        <strong>{{ appName }} is disconnected !</strong><br>
+        <router-link :to="'Login'" class="alert-link">Please sign in</router-link>
+      </b-alert>
     </div>
     <router-view/>
     <router-view name="SideBar"/>

@@ -1,15 +1,19 @@
 <template lang="html">
   <div class="">
-    <form class="" @submit.prevent="login">
-      <h2>Please sign in</h2>
-      <label for="urlAPI">API's url</label>
-      <input v-model="url" type="text" placeholder="http://localhost:8060" id="urlAPI" required>
-      <label for="username">Login</label>
-      <input v-model="user" type="text" id="username" required autofocus>
-      <label for="userPassword">Password</label>
-      <input v-model="password" type="password" id="userPassword" required>
-      <button type="submit">Sign in</button>
-    </form>
+    <b-container fluid>
+      <b-form @submit.prevent="login">
+        <b-form-group id="fieldURLAPI" description="Put API's location" label="API's url" label-for="urlAPI">
+          <b-form-input id="urlAPI" v-model="url" placeholder="https://your_domain.com:8060"></b-form-input>
+        </b-form-group>
+        <b-form-group id="fieldLogin" description="Put your login" label="Login" label-for="username">
+          <b-form-input id="username" v-model="user" placeholder="Login"></b-form-input>
+        </b-form-group>
+        <b-form-group id="fieldPassword" description="Put your password" label="Password" label-for="userPassword">
+          <b-form-input id="userPassword" v-model="password" placeholder="Password" type="password"></b-form-input>
+        </b-form-group>
+        <b-button type="submit" size="sm" variant="primary">Sign in</b-button>
+      </b-form>
+    </b-container>
   </div>
 </template>
 
