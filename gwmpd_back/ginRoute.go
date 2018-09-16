@@ -736,6 +736,7 @@ func (e *com) getStatusMPD(c *gin.Context) {
 		}
 	}
 
+	myStatus.VolumeSav = e.info.status.VolumeSav
 	e.info.status = &myStatus
 
 	c.JSON(200, gin.H{
