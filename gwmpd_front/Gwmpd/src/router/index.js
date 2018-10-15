@@ -13,7 +13,7 @@ export default new Router({
   mode: 'history',
   routes: [
     {
-      path: '/',
+      path: '/queue',
       name: 'QueueView',
       meta: {auth: true},
       components: {
@@ -47,7 +47,7 @@ export default new Router({
       }
     }, {
       path: '*',
-      redirect: '/'
+      redirect: '/queue'
     }
   ]
 })

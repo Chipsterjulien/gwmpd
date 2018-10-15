@@ -1,13 +1,17 @@
 <template>
   <div class="" v-if="getConnectionStatus === true">
-    <div class="">
-      File: {{ currentSong.file }} <br>
-      Title song: {{ currentSong.Title }} <br>
-      Album: {{ currentSong.Album }} <br>
-      Groupe: {{ currentSong.Artist }} <br>
-      Consommé: {{ status.elapsed }}s <br>
-      Temps total: {{ status.duration }}s <br>
-    </div>
+    <b-container>
+      <div v-if="currentSong.Title === '' && currentSong.Album === '' && currentSong.Artist === ''">
+        File: {{ currentSong.file }}
+      </div>
+      <div v-else>
+        Title song: {{ currentSong.Title }} <br>
+        Album: {{ currentSong.Album }} <br>
+        Groupe: {{ currentSong.Artist }} <br>
+        Consommé: {{ status.elapsed }}s <br>
+        Temps total: {{ status.duration }}s <br>
+      </div>
+    </b-container>
     <br>
     <br>
     <div class="" v-if="status.duration !== 0">

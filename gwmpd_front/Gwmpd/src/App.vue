@@ -1,39 +1,40 @@
 <template>
   <div id="app">
-    <div class="" v-if="getConnectionStatus === true">
-      <b-navbar toggleable="md" variant="info" type="dark">
+    <div v-if="getConnectionStatus === true">
+      <b-navbar toggleable="md" class=navBar type="dark">
+        <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
         <b-navbar-brand>{{ appName }}</b-navbar-brand>
+        <b-collapse is-nav id="nav_collapse">
+          <b-navbar-nav>
+            <b-nav-item :to="{ name: 'QueueView', params: {} }">Queue</b-nav-item>
+            <b-nav-item :to="{ name: 'PlaylistView', params: {} }">Playlists</b-nav-item>
+            <b-nav-item :to="{ name: 'ConfigView', params: {} }" disabled>Config</b-nav-item>
+            <b-nav-item :to="{ name: 'AboutView', params: {} }">About</b-nav-item>
+          </b-navbar-nav>
+        </b-collapse>
       </b-navbar>
 
-      <div class="TopBar">
-        {{ appName }}
-        <router-link :to="{ name: 'QueueView', params: {} }">Queue</router-link>
-        <router-link :to="{ name: 'PlaylistView', params: {} }">Playlists</router-link>
-        <router-link :to="{ name: 'AboutView', params: {} }">About</router-link>
-      </div>
-      <div class="">
-        <button type="button" name="previousSong" @click="previousSong">Previous</button>
-        <button type="button" name="stopSong" @click="stopSong">Stop</button>
-        <button type="button" name="playSong" @click="playSong" v-if="!songPlayed">Play</button>
-        <button type="button" name="pauseSong" @click="pauseSong" v-if="songPlayed">Pause</button>
-        <button type="button" name="forwardSong" @click="forwardSong">Forward</button>
-      </div>
-      <div class="">
-        <!-- song's volume -->
-        <div class="">
-          Volume: {{ getStatus.volume }}
-        </div>
-        <div class="">
-          <button type="button" name="muteVolume" @click="toggleMuteVolume">Mute</button>
-          <button type="button" name="lessVolume" @click="lessVolume">Less</button>
-          <button type="button" name="moreVolume" @click="moreVolume">More</button>
-        </div>
-      </div>
-      <div class="" v-if="getStatus.error !== ''">
+      <b-container>
+        <b-row class="positionning text-center">
+          <b-col><b-button size="lg" @click="previousSong" class="icon-skip_previous"></b-button></b-col>
+          <b-col><b-button size="lg" @click="stopSong" class="icon-stop"></b-button></b-col>
+          <b-col><b-button size="lg" @click="playSong" v-if="!songPlayed" class="icon-play_arrow"></b-button><b-button size="lg" @click="pauseSong" v-if="songPlayed" class="icon-pause"></b-button></b-col>
+          <b-col><b-button size="lg" @click="forwardSong" class="icon-skip_next"></b-button></b-col>
+        </b-row>
+
+        <b-row class="sound text-center">
+          <b-col cols="3"><b-button size="lg" @click="toggleMuteVolume" class="icon-volume_off"></b-button></b-col>
+          <b-col cols="9" class="slidecontainer"><b-form-input id="volumeSlider" b-tooltip.hover :title="volumeValue" type="range" min="0" max="100" :step="5" class="slider" v-model.number="volumeValue"></b-form-input></b-col>
+        </b-row>
+      </b-container>
+
+      <hr>
+
+      <div v-if="getStatus.error !== ''">
         Error: {{ getStatus.error }}
       </div>
     </div>
-    <div class="" v-else>
+    <div v-else>
       <b-alert show variant="warning">
         <strong>{{ appName }} is disconnected !</strong><br>
         <router-link :to="'Login'" class="alert-link">Please sign in</router-link>
@@ -60,7 +61,19 @@ export default {
       getConnectionStatus: 'getConnectionStatus',
       getCurrentSongInfos: 'getCurrentSongInfos',
       getStatus: 'getStatusInfos'
-    })
+    }),
+    volumeValue: {
+      get: function () {
+        return this.getStatus.volume
+      },
+      set: function (volumePosition) {
+        this.setVolume(volumePosition)
+        this.axios.post('v1/setVolume', {volume: volumePosition})
+          .then(response => {
+            this.setVolume(volumePosition)
+          })
+      }
+    }
   },
   methods: {
     refresh () {
@@ -82,26 +95,26 @@ export default {
       'setPlaylist',
       'setState'
     ]),
-    lessVolume () {
-      if (this.getStatus.volume >= 5) {
-        this.axios.post('v1/setVolume', {
-          volume: this.getStatus.volume - 5
-        })
-          .then(response => {
-            this.setVolume(response.data.volume)
-          })
-      }
-    },
-    moreVolume () {
-      if (this.getStatus.volume <= 95) {
-        this.axios.post('v1/setVolume', {
-          volume: this.getStatus.volume + 5
-        })
-          .then(response => {
-            this.setVolume(response.data.volume)
-          })
-      }
-    },
+    // lessVolume () {
+    //   if (this.getStatus.volume >= 5) {
+    //     this.axios.post('v1/setVolume', {
+    //       volume: this.getStatus.volume - 5
+    //     })
+    //       .then(response => {
+    //         this.setVolume(response.data.volume)
+    //       })
+    //   }
+    // },
+    // moreVolume () {
+    //   if (this.getStatus.volume <= 95) {
+    //     this.axios.post('v1/setVolume', {
+    //       volume: this.getStatus.volume + 5
+    //     })
+    //       .then(response => {
+    //         this.setVolume(response.data.volume)
+    //       })
+    //   }
+    // },
     toggleMuteVolume () {
       this.axios.put('v1/toggleMuteVolume')
         .then(response => {
@@ -178,12 +191,67 @@ export default {
 </script>
 
 <style lang="scss">
-// #app {
-//   font-family: 'Avenir', Helvetica, Arial, sans-serif;
-//   -webkit-font-smoothing: antialiased;
-//   -moz-osx-font-smoothing: grayscale;
-//   text-align: center;
-//   color: #2c3e50;
-//   margin-top: 60px;
-// }
+  @import "./style";
+  html, body {
+    background-color: #E0E0E0;
+  }
+
+  #app {
+    .navBar {
+      background-color: #1E88E5;
+    }
+
+    .positionning {
+      margin-top: 20px;
+    }
+
+    .slider {
+      :hover {
+        opacity: 1;
+      }
+      -webkit-appearance: none;
+      width: 100%;
+      height: 15px;
+      border-radius: 5px;
+      background: #9E9E9E;
+      outline: none;
+      opacity: 0.7;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #1E88E5;
+      cursor: pointer;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: #1E88E5;
+      cursor: pointer;
+    }
+
+    .slidecontainer {
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    .sound{
+      margin-top: 20px;
+    }
+
+  // font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  //   -webkit-font-smoothing: antialiased;
+  //   -moz-osx-font-smoothing: grayscale;
+  //   text-align: center;
+  //   color: #2c3e50;
+  //   margin-top: 60px;
+  }
 </style>
