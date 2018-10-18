@@ -78,7 +78,7 @@ func initGin(com *com) {
 		auth.GET("/stopSong", com.getStopSong)
 		auth.PUT("/toggleConsume", com.toggleConsume)
 		auth.PUT("/toggleRandom", com.toggleRandom)
-		auth.PUT("/toggleSingle", com.toggleSingle)
+		// auth.PUT("/toggleSingle", com.toggleSingle)
 		auth.PUT("/toggleRepeat", com.toggleRepeat)
 		auth.PUT("/toggleMuteVolume", com.toggleMuteVolume)
 		auth.GET("/updateDB", com.updateDB)

@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'gwmpd';
-  src:  url('fonts/gwmpd.eot?r9um5b');
-  src:  url('fonts/gwmpd.eot?r9um5b#iefix') format('embedded-opentype'),
-    url('fonts/gwmpd.ttf?r9um5b') format('truetype'),
-    url('fonts/gwmpd.woff?r9um5b') format('woff'),
-    url('fonts/gwmpd.svg?r9um5b#gwmpd') format('svg');
+  src:  url('fonts/gwmpd.eot?rd72wr');
+  src:  url('fonts/gwmpd.eot?rd72wr#iefix') format('embedded-opentype'),
+    url('fonts/gwmpd.ttf?rd72wr') format('truetype'),
+    url('fonts/gwmpd.woff?rd72wr') format('woff'),
+    url('fonts/gwmpd.svg?rd72wr#gwmpd') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -43,6 +43,9 @@
 .icon-mode_edit:before {
   content: "\e254";
 }
+.icon-format_align_left:before {
+  content: "\e236";
+}
 .icon-keyboard_arrow_down:before {
   content: "\e313";
 }
@@ -54,9 +57,6 @@
 }
 .icon-keyboard_arrow_up:before {
   content: "\e316";
-}
-.icon-sync:before {
-  content: "\e627";
 }
 .icon-pause:before {
   content: "\e034";
@@ -76,8 +76,14 @@
 .icon-remove:before {
   content: "\e15b";
 }
+.icon-repeat:before {
+  content: "\e040";
+}
 .icon-settings:before {
   content: "\e8b8";
+}
+.icon-shuffle:before {
+  content: "\e043";
 }
 .icon-skip_next:before {
   content: "\e044";

@@ -1137,39 +1137,39 @@ func (e *com) toggleRepeat(c *gin.Context) {
 	c.JSON(200, gin.H{"toggleRepeat": "ok", "repeat": e.info.status.Repeat})
 }
 
-func (e *com) toggleSingle(c *gin.Context) {
-	log := logging.MustGetLogger("log")
+// func (e *com) toggleSingle(c *gin.Context) {
+// 	log := logging.MustGetLogger("log")
 
-	e.mutex.Lock()
-	e.info.status.Single = !e.info.status.Single
+// 	e.mutex.Lock()
+// 	e.info.status.Single = !e.info.status.Single
 
-	if e.info.status.Single {
-		e.sendCmdToMPDChan <- []byte("single 1")
-	} else {
-		e.sendCmdToMPDChan <- []byte("single 0")
-	}
+// 	if e.info.status.Single {
+// 		e.sendCmdToMPDChan <- []byte("single 1")
+// 	} else {
+// 		e.sendCmdToMPDChan <- []byte("single 0")
+// 	}
 
-	for {
-		line := <-e.cmdToConsumeChan
-		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
-			break
-		} else if bytes.Contains(line, []byte("ACK")) {
-			e.mutex.Unlock()
-			c.JSON(200, gin.H{"toggleSingle": "failed"})
+// 	for {
+// 		line := <-e.cmdToConsumeChan
+// 		if bytes.Equal(line, []byte("OK")) {
+// 			e.mutex.Unlock()
+// 			break
+// 		} else if bytes.Contains(line, []byte("ACK")) {
+// 			e.mutex.Unlock()
+// 			c.JSON(200, gin.H{"toggleSingle": "failed"})
 
-			return
-		}
+// 			return
+// 		}
 
-		first, _ := splitLine(&line)
-		switch first {
-		default:
-			log.Infof("In toggleSingle, unknown: \"%s\"\n", first)
-		}
-	}
+// 		first, _ := splitLine(&line)
+// 		switch first {
+// 		default:
+// 			log.Infof("In toggleSingle, unknown: \"%s\"\n", first)
+// 		}
+// 	}
 
-	c.JSON(200, gin.H{"toggleSingle": "ok", "single": e.info.status.Single})
-}
+// 	c.JSON(200, gin.H{"toggleSingle": "ok", "single": e.info.status.Single})
+// }
 
 func (e *com) toggleMuteVolume(c *gin.Context) {
 	log := logging.MustGetLogger("log")
