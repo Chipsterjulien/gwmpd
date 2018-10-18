@@ -27,6 +27,8 @@ import bCollapse from 'bootstrap-vue/es/components/collapse/collapse'
 import bProgressBar from 'bootstrap-vue/es/components/progress/progress-bar'
 import bTooltip from 'bootstrap-vue/es/components/tooltip/tooltip'
 import bTable from 'bootstrap-vue/es/components/table/table'
+import bFormCheckbox from 'bootstrap-vue/es/components/form-checkbox/form-checkbox'
+import bFormCheckboxGroup from 'bootstrap-vue/es/components/form-checkbox/form-checkbox-group'
 
 import App from './App'
 import router from './router'
@@ -44,6 +46,8 @@ Vue.component('b-alert', bAlert)
 Vue.component('b-form', bForm)
 Vue.component('b-form-group', bFormGroup)
 Vue.component('b-form-input', bFormInput)
+Vue.component('b-form-checkbox', bFormCheckbox)
+Vue.component('b-form-checkbox-group', bFormCheckboxGroup)
 Vue.component('b-container', bContainer)
 Vue.component('b-row', bRow)
 Vue.component('b-col', bCol)
