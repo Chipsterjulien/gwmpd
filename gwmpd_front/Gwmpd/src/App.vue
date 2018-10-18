@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div v-if="getConnectionStatus === true">
+    <div class="myNavBar" v-if="getConnectionStatus === true">
       <b-navbar toggleable="md" class=navBar type="dark">
         <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
         <b-navbar-brand>{{ appName }}</b-navbar-brand>
@@ -23,12 +23,17 @@
         </b-row>
 
         <b-row class="sound text-center">
-          <b-col cols="3"><b-button size="lg" @click="toggleMuteVolume" class="icon-volume_off"></b-button></b-col>
+          <b-col cols="3">
+            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_off" v-if="volumeValue == 0"></b-button>
+            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_mute" v-if="volumeValue > 0 && volumeValue < 30"></b-button>
+            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_down" v-if="volumeValue > 29 && volumeValue < 60"></b-button>
+            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_up" v-if="volumeValue > 59"></b-button>
+          </b-col>
           <b-col cols="9" class="slidecontainer"><b-form-input id="volumeSlider" b-tooltip.hover :title="volumeValue" type="range" min="0" max="100" :step="5" class="slider" v-model.number="volumeValue"></b-form-input></b-col>
         </b-row>
       </b-container>
 
-      <hr>
+      <!-- <hr> -->
 
       <div v-if="getStatus.error !== ''">
         Error: {{ getStatus.error }}
@@ -197,6 +202,9 @@ export default {
   }
 
   #app {
+    .myNavBar {
+      padding-bottom: 20px;
+    }
     .navBar {
       background-color: #1E88E5;
     }

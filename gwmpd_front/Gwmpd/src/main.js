@@ -26,6 +26,7 @@ import bNavForm from 'bootstrap-vue/es/components/nav/nav-form'
 import bCollapse from 'bootstrap-vue/es/components/collapse/collapse'
 import bProgressBar from 'bootstrap-vue/es/components/progress/progress-bar'
 import bTooltip from 'bootstrap-vue/es/components/tooltip/tooltip'
+import bTable from 'bootstrap-vue/es/components/table/table'
 
 import App from './App'
 import router from './router'
@@ -57,6 +58,7 @@ Vue.component('b-nav-form', bNavForm)
 Vue.component('b-collapse', bCollapse)
 Vue.component('b-progress-bar', bProgressBar)
 Vue.component('b-tooltip', bTooltip)
+Vue.component('b-table', bTable)
 
 Vue.use(VueAxios, axios)
 Vue.axios.defaults.baseURL = 'http://localhost:8060'

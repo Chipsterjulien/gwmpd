@@ -3,6 +3,31 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+function convertSecondsToString (time) {
+  // Hours, minutes and seconds
+  var hrs = ~~(time / 3600)
+  var mins = ~~((time % 3600) / 60)
+  var secs = ~~time % 60
+
+  // Output like "1:01" or "4:03:59" or "123:03:59"
+  var ret = ''
+
+  if (hrs > 0) {
+    ret += '' + hrs + ':' + (mins < 10 ? '0' : '')
+  }
+
+  ret += '' + mins + ':' + (secs < 10 ? '0' : '')
+  ret += '' + secs
+
+  return ret
+}
+
+function getMusicName (filename) {
+  var filenameSplitted = filename.split('/')
+
+  return filenameSplitted[filenameSplitted.length - 1]
+}
+
 const currentPlaylist = {
   state: {
     playlist: {}
@@ -12,6 +37,11 @@ const currentPlaylist = {
   },
   mutations: {
     SET_PLAYLIST: (state, newPlaylist) => {
+      var i
+      for (i = 0; i < newPlaylist.length; i++) {
+        newPlaylist[i].Duration = convertSecondsToString(newPlaylist[i].Duration)
+        newPlaylist[i].File = getMusicName(newPlaylist[i].File)
+      }
       state.playlist = newPlaylist
     }
   },

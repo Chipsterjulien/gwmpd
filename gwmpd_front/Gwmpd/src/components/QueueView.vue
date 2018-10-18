@@ -2,43 +2,34 @@
   <div class="" v-if="getConnectionStatus === true">
     <b-container>
       <div v-if="currentSong.Title === '' && currentSong.Album === '' && currentSong.Artist === ''">
-        File: {{ currentSong.file }}
+        <h3 class="truncateLongText">{{ currentSong.file }}</h3>
       </div>
-      <div v-else>
-        Title song: {{ currentSong.Title }} <br>
-        Album: {{ currentSong.Album }} <br>
-        Groupe: {{ currentSong.Artist }} <br>
-        Consommé: {{ status.elapsed }}s <br>
-        Temps total: {{ status.duration }}s <br>
+      <div class="text-center" v-else>
+        <!-- Attention, si des éléments sont absents, la vue bouge est c'est dégueulasse ! -->
+        <h5 class="truncateLongText">{{ currentSong.Album}}</h5>
+        <h2 class="truncateLongText">{{ currentSong.Title }}</h2>
+        <h5 class="truncateLongText">{{ currentSong.Artist }}</h5>
       </div>
     </b-container>
-    <br>
-    <br>
-    <div class="" v-if="status.duration !== 0">
-      Temps total: {{ status.duration }}<br>
-      <input type="range" min="0" :max="status.duration" v-model.number="sliderValue"><br>
-      SliderValue: {{ sliderValue }}<br>
-      <button type="button" @click="moveBackwardsInTime">-10s</button>
-      <button type="button" @click="moveForwardInTime">+10s</button>
+    <div class="musicSliderAndNumber" v-if="status.duration !== 0">
+      <b-container fluid>
+        <b-row class="currentSongState">
+          <b-col class="text-left"><strong>{{ getMusicElapsed }}</strong></b-col>
+          <b-col class="text-right"><strong>{{ getMusicDuration }}</strong></b-col>
+        </b-row>
+      </b-container>
+      <!-- Don't use b-form-input otherwise, music will be splited every second -->
+      <input type="range" class="musicSlider" b-tooltip.hover :title="getMusicElapsed" min="0" :max="status.duration" v-model.number="musicValue"><br>
     </div>
-    <br>
-    <br>
     <div class="">
-      <table v-if="currentPlaylist.length">
-        <tr>
-          <th>#</th>
-          <th>File</th>
-          <th>Title</th>
-          <th>Duration</th>
-        </tr>
-        <tr v-for="(k, v) in currentPlaylist" :key="v">
-          <td>{{ k.Pos + 1 }}</td>
-          <td>{{ k.File }}</td>
-          <td>{{ k.Title }}</td>
-          <td>{{ k.Time }}</td>
-          <td v-if="currentSong.Id !== k.ID"><button @click="playSong(k.ID, k.Pos)">play</button></td>
-        </tr>
-      </table>
+      <b-table striped hover :items="currentPlaylist" :fields="fields">
+        <template slot="File" slot-scope="data">
+          <span class="truncateLongText">{{ data.item.File }}</span>
+        </template>
+        <template slot="buttonPlayMusic" slot-scope="data">
+          <span v-if="currentSong.Id !== data.item.ID"><b-button class="icon-play_arrow" @click="playSong(data.item.ID, data.item.Pos)"></b-button></span>
+        </template>
+      </b-table>
     </div>
     <div class="">
       <router-view name='SideBar'/>
@@ -52,7 +43,8 @@ export default {
   name: 'QueueView',
   data () {
     return {
-      connected: false
+      connected: false,
+      fields: [{key: 'File', label: 'Filename'}, 'Duration', {key: 'buttonPlayMusic', label: ''}]
     }
   },
   computed: {
@@ -62,7 +54,13 @@ export default {
       getConnectionStatus: 'getConnectionStatus',
       status: 'getStatusInfos'
     }),
-    sliderValue: {
+    getMusicDuration () {
+      return this.convertSecondsToString(this.status.duration)
+    },
+    getMusicElapsed () {
+      return this.convertSecondsToString(this.status.elapsed)
+    },
+    musicValue: {
       get: function () {
         return this.status.elapsed
       },
@@ -82,6 +80,24 @@ export default {
       'setState',
       'setID'
     ]),
+    convertSecondsToString (time) {
+      // Hours, minutes and seconds
+      var hrs = ~~(time / 3600)
+      var mins = ~~((time % 3600) / 60)
+      var secs = ~~time % 60
+
+      // Output like "1:01" or "4:03:59" or "123:03:59"
+      var ret = ''
+
+      if (hrs > 0) {
+        ret += '' + hrs + ':' + (mins < 10 ? '0' : '')
+      }
+
+      ret += '' + mins + ':' + (secs < 10 ? '0' : '')
+      ret += '' + secs
+
+      return ret
+    },
     playSong (id, pos) {
       this.axios.get('v1/playSong', {params: {pos: pos}})
         .then(response => {
@@ -130,4 +146,82 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .currentSongState {
+    padding-bottom: 10px;
+  }
+  .truncateLongText {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .musicSlider {
+    :hover {
+      opacity: 1;
+    }
+    -webkit-appearance: none;
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: #9E9E9E;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+
+  .musicSlider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #1E88E5;
+    cursor: pointer;
+  }
+
+  .musicSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #1E88E5;
+    cursor: pointer;
+  }
+
+  .slider {
+    :hover {
+      opacity: 1;
+    }
+    -webkit-appearance: none;
+    width: 100%;
+    height: 15px;
+    border-radius: 5px;
+    background: #9E9E9E;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #1E88E5;
+    cursor: pointer;
+  }
+
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #1E88E5;
+    cursor: pointer;
+  }
+
+  .musicSliderAndNumber {
+    padding-bottom: 20px;
+  }
 </style>
