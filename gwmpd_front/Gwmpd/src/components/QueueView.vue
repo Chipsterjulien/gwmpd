@@ -24,7 +24,7 @@
     <div class="">
       <b-table striped hover :items="currentPlaylist" :fields="fields">
         <template slot="File" slot-scope="data">
-          <span class="truncateLongText">{{ data.item.File }}</span>
+          <span class="truncateLongText responsiveFont">{{ data.item.File }}</span>
         </template>
         <template slot="buttonPlayMusic" slot-scope="data">
           <span v-if="currentSong.Id !== data.item.ID"><b-button class="icon-play_arrow" @click="playSong(data.item.ID, data.item.Pos)"></b-button></span>
@@ -155,6 +155,11 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+
+  .responsiveFont {
+    // font-size: 4vw;
+  }
+
   .musicSlider {
     :hover {
       opacity: 1;

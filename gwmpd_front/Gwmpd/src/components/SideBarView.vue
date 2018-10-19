@@ -1,16 +1,25 @@
 <template lang="html">
   <div class="" v-if="getConnectionStatus === true">
-    <b-form-group>
-      <b-form-checkbox-group buttons button-variant="primary" v-model="selected">
-        <b-form-checkbox value="consume" @change="toggleConsume" class="icon-whatshot"></b-form-checkbox>
-        <b-form-checkbox value="random" @change="toggleRandom" class="icon-shuffle"></b-form-checkbox>
-        <b-form-checkbox value="repeat" @change="toggleRepeat" class="icon-repeat"></b-form-checkbox>
-      </b-form-checkbox-group>
-    </b-form-group>
-
-    <button type="button" @click="shuffle">Shuffle</button><br>
-    <button type="button" @click="updateDB">Update DB</button><br>
-    <button type="button" @click="clearQueue">Clear queue</button>
+    <b-container class="text-center positionning">
+      <b-row align-h="around">
+        <b-col>
+          <b-form-group>
+            <b-form-checkbox-group buttons button-variant="primary" v-model="selected">
+              <b-form-checkbox v-b-tooltip.hover.top title="Consume music (2-state button)" value="consume" @change="toggleConsume" class="icon-whatshot iconSize"></b-form-checkbox>
+              <b-form-checkbox v-b-tooltip.hover.top title="Random without changing list order (2-state button)" value="random" @change="toggleRandom" class="icon-shuffle iconSize"></b-form-checkbox>
+              <b-form-checkbox v-b-tooltip.hover.top title="Loop playlist (2-state button)" value="repeat" @change="toggleRepeat" class="icon-repeat iconSize"></b-form-checkbox>
+            </b-form-checkbox-group>
+          </b-form-group>
+        </b-col>
+        <b-col>
+          <b-button-group>
+            <b-button v-b-tooltip.hover.top title="Random list order" variant="success" @click="shuffle" class="icon-shuffle iconSize"></b-button>
+            <b-button v-b-tooltip.hover.top title="Update music database" variant="success" @click="updateDB" class="icon-autorenew iconSize"></b-button>
+            <b-button v-b-tooltip.hover.top title="Clear queue" variant="success" @click="clearQueue" class="icon-clear_all iconSize"></b-button>
+          </b-button-group>
+        </b-col>
+      </b-row>
+    </b-container>
   </div>
 </template>
 
@@ -95,4 +104,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .positionning {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
 </style>

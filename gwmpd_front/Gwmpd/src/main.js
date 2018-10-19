@@ -25,10 +25,11 @@ import bNavItem from 'bootstrap-vue/es/components/nav/nav-item'
 import bNavForm from 'bootstrap-vue/es/components/nav/nav-form'
 import bCollapse from 'bootstrap-vue/es/components/collapse/collapse'
 import bProgressBar from 'bootstrap-vue/es/components/progress/progress-bar'
-import bTooltip from 'bootstrap-vue/es/components/tooltip/tooltip'
+// import bTooltip from 'bootstrap-vue/es/components/tooltip/tooltip'
 import bTable from 'bootstrap-vue/es/components/table/table'
 import bFormCheckbox from 'bootstrap-vue/es/components/form-checkbox/form-checkbox'
 import bFormCheckboxGroup from 'bootstrap-vue/es/components/form-checkbox/form-checkbox-group'
+import vBTooltip from 'bootstrap-vue/es/directives/tooltip/tooltip'
 
 import App from './App'
 import router from './router'
@@ -61,8 +62,9 @@ Vue.component('b-nav-item', bNavItem)
 Vue.component('b-nav-form', bNavForm)
 Vue.component('b-collapse', bCollapse)
 Vue.component('b-progress-bar', bProgressBar)
-Vue.component('b-tooltip', bTooltip)
+// Vue.component('b-tooltip', bTooltip)
 Vue.component('b-table', bTable)
+Vue.directive('b-tooltip', vBTooltip)
 
 Vue.use(VueAxios, axios)
 Vue.axios.defaults.baseURL = 'http://localhost:8060'

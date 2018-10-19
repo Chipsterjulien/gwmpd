@@ -16,24 +16,25 @@
 
       <b-container>
         <b-row class="positionning text-center">
-          <b-col><b-button size="lg" @click="previousSong" class="icon-skip_previous"></b-button></b-col>
-          <b-col><b-button size="lg" @click="stopSong" class="icon-stop"></b-button></b-col>
-          <b-col><b-button size="lg" @click="playSong" v-if="!songPlayed" class="icon-play_arrow"></b-button><b-button size="lg" @click="pauseSong" v-if="songPlayed" class="icon-pause"></b-button></b-col>
-          <b-col><b-button size="lg" @click="forwardSong" class="icon-skip_next"></b-button></b-col>
+          <b-col><b-button v-b-tooltip.hover.top title="Previous song" @click="previousSong" class="icon-skip_previous iconSize"></b-button></b-col>
+          <b-col><b-button v-b-tooltip.hover.top title="Stop song" @click="stopSong" class="icon-stop iconSize"></b-button></b-col>
+          <b-col>
+            <b-button v-b-tooltip.hover.top title="Play song" @click="playSong" v-if="!songPlayed" class="icon-play_arrow iconSize"></b-button>
+            <b-button v-b-tooltip.hover.top title="Pause song" @click="pauseSong" v-if="songPlayed" class="icon-pause iconSize"></b-button>
+          </b-col>
+          <b-col><b-button v-b-tooltip.hover.top title="Next song" @click="forwardSong" class="icon-skip_next iconSize"></b-button></b-col>
         </b-row>
 
         <b-row class="sound text-center">
           <b-col cols="3">
-            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_off" v-if="volumeValue == 0"></b-button>
-            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_mute" v-if="volumeValue > 0 && volumeValue < 30"></b-button>
-            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_down" v-if="volumeValue > 29 && volumeValue < 60"></b-button>
-            <b-button size="lg" @click="toggleMuteVolume" class="icon-volume_up" v-if="volumeValue > 59"></b-button>
+            <b-button v-b-tooltip.hover.top title="Unmute sound" @click="toggleMuteVolume" class="icon-volume_off iconSize" v-if="volumeValue == 0"></b-button>
+            <b-button v-b-tooltip.hover.top title="Mute sound" @click="toggleMuteVolume" class="icon-volume_mute iconSize" v-if="volumeValue > 0 && volumeValue < 30"></b-button>
+            <b-button v-b-tooltip.hover.top title="Mute sound" @click="toggleMuteVolume" class="icon-volume_down iconSize" v-if="volumeValue > 29 && volumeValue < 60"></b-button>
+            <b-button v-b-tooltip.hover.top title="Mute sound" @click="toggleMuteVolume" class="icon-volume_up iconSize" v-if="volumeValue > 59"></b-button>
           </b-col>
-          <b-col cols="9" class="slidecontainer"><b-form-input id="volumeSlider" b-tooltip.hover :title="volumeValue" type="range" min="0" max="100" :step="5" class="slider" v-model.number="volumeValue"></b-form-input></b-col>
+          <b-col cols="9" class="slidecontainer"><b-form-input id="volumeSlider" b-tooltip.hover.top :title="volumeValue" type="range" min="0" max="100" :step="5" class="slider" v-model.number="volumeValue"></b-form-input></b-col>
         </b-row>
       </b-container>
-
-      <!-- <hr> -->
 
       <div v-if="getStatus.error !== ''">
         Error: {{ getStatus.error }}
@@ -45,8 +46,10 @@
         <router-link :to="'Login'" class="alert-link">Please sign in</router-link>
       </b-alert>
     </div>
-    <router-view/>
-    <router-view name="SideBar"/>
+    <b-container fluid>
+      <router-view name="SideBar"/>
+      <router-view/>
+    </b-container>
   </div>
 </template>
 
@@ -254,6 +257,13 @@ export default {
     .sound{
       margin-top: 20px;
     }
+
+    .iconSize {
+    width: 50px;
+    height: 40px;
+    line-height: 25px;
+    font-size: 1.3rem;
+  }
 
   // font-family: 'Avenir', Helvetica, Arial, sans-serif;
   //   -webkit-font-smoothing: antialiased;
