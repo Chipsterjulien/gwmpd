@@ -1,14 +1,15 @@
 <template>
   <div class="" v-if="getConnectionStatus === true">
     <b-container>
-      <div v-if="currentSong.Title === '' && currentSong.Album === '' && currentSong.Artist === ''">
-        <h3 class="truncateLongText">{{ currentSong.file }}</h3>
+      <div class="text-center" v-if="currentSong.Title === '' && currentSong.Album === '' && currentSong.Artist === ''">
+        <h5>&nbsp;</h5>
+        <h2 class="truncateLongText">{{ currentSong.file }}</h2>
+        <h5>&nbsp;</h5>
       </div>
       <div class="text-center" v-else>
-        <!-- Attention, si des éléments sont absents, la vue bouge est c'est dégueulasse ! -->
-        <h5 class="truncateLongText">{{ currentSong.Album}}</h5>
-        <h2 class="truncateLongText">{{ currentSong.Title }}</h2>
-        <h5 class="truncateLongText">{{ currentSong.Artist }}</h5>
+        <h5 class="truncateLongText"><span v-if="currentSong.Album !== ''">{{ currentSong.Album }}</span><span v-else>&nbsp;</span></h5>
+        <h2 class="truncateLongText"><span v-if="currentSong.Title !== ''">{{ currentSong.Title }}</span><span v-else>&nbsp;</span></h2>
+        <h5 class="truncateLongText"><span v-if="currentSong.Artist !== ''">{{ currentSong.Artist }}</span><span v-else>&nbsp;</span></h5>
       </div>
     </b-container>
     <div class="musicSliderAndNumber" v-if="status.duration !== 0">
@@ -22,9 +23,9 @@
       <input type="range" class="musicSlider" b-tooltip.hover :title="getMusicElapsed" min="0" :max="status.duration" v-model.number="musicValue"><br>
     </div>
     <div class="">
-      <b-table striped hover :items="currentPlaylist" :fields="fields">
+      <b-table stacked="md" striped hover :items="currentPlaylist" :fields="fields">
         <template slot="File" slot-scope="data">
-          <span class="truncateLongText responsiveFont">{{ data.item.File }}</span>
+          <span class="tooLongFilenameSong">{{ data.item.File }}</span>
         </template>
         <template slot="buttonPlayMusic" slot-scope="data">
           <span v-if="currentSong.Id !== data.item.ID"><b-button class="icon-play_arrow" @click="playSong(data.item.ID, data.item.Pos)"></b-button></span>
@@ -149,16 +150,6 @@ export default {
   .currentSongState {
     padding-bottom: 10px;
   }
-  .truncateLongText {
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .responsiveFont {
-    // font-size: 4vw;
-  }
 
   .musicSlider {
     :hover {
@@ -174,7 +165,6 @@ export default {
     -webkit-transition: .2s;
     transition: opacity .2s;
   }
-
   .musicSlider::-moz-range-thumb {
     width: 25px;
     height: 25px;
@@ -182,7 +172,6 @@ export default {
     background: #1E88E5;
     cursor: pointer;
   }
-
   .musicSlider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -191,6 +180,10 @@ export default {
     border-radius: 50%;
     background: #1E88E5;
     cursor: pointer;
+  }
+
+  .musicSliderAndNumber {
+    padding-bottom: 20px;
   }
 
   .slider {
@@ -207,7 +200,6 @@ export default {
     -webkit-transition: .2s;
     transition: opacity .2s;
   }
-
   .slider::-moz-range-thumb {
     width: 25px;
     height: 25px;
@@ -215,7 +207,6 @@ export default {
     background: #1E88E5;
     cursor: pointer;
   }
-
   .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -226,7 +217,14 @@ export default {
     cursor: pointer;
   }
 
-  .musicSliderAndNumber {
-    padding-bottom: 20px;
+  .tooLongFilenameSong {
+    word-break: break-all;
+  }
+
+  .truncateLongText {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>

@@ -1,7 +1,7 @@
 <template lang="html">
   <div class="" v-if="getConnectionStatus === true">
-    <b-container class="text-center positionning">
-      <b-row align-h="around">
+    <div class="text-center positionning">
+      <b-row>
         <b-col>
           <b-form-group>
             <b-form-checkbox-group buttons button-variant="primary" v-model="selected">
@@ -19,7 +19,7 @@
           </b-button-group>
         </b-col>
       </b-row>
-    </b-container>
+    </div>
   </div>
 </template>
 
@@ -105,7 +105,7 @@ export default {
 
 <style lang="scss" scoped>
   .positionning {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
   }
 </style>
