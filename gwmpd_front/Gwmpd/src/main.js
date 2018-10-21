@@ -30,6 +30,8 @@ import bTable from 'bootstrap-vue/es/components/table/table'
 import bFormCheckbox from 'bootstrap-vue/es/components/form-checkbox/form-checkbox'
 import bFormCheckboxGroup from 'bootstrap-vue/es/components/form-checkbox/form-checkbox-group'
 import vBTooltip from 'bootstrap-vue/es/directives/tooltip/tooltip'
+import bInputGroup from 'bootstrap-vue/es/components/input-group/input-group'
+import bInputGroupAppend from 'bootstrap-vue/es/components/input-group/input-group-append'
 
 import App from './App'
 import router from './router'
@@ -62,9 +64,10 @@ Vue.component('b-nav-item', bNavItem)
 Vue.component('b-nav-form', bNavForm)
 Vue.component('b-collapse', bCollapse)
 Vue.component('b-progress-bar', bProgressBar)
-// Vue.component('b-tooltip', bTooltip)
 Vue.component('b-table', bTable)
 Vue.directive('b-tooltip', vBTooltip)
+Vue.component('b-input-group', bInputGroup)
+Vue.component('b-input-group-append', bInputGroupAppend)
 
 Vue.use(VueAxios, axios)
 Vue.axios.defaults.baseURL = 'http://localhost:8060'

@@ -61,7 +61,12 @@ const allPlaylists = {
   },
   mutations: {
     SET_ALL_PLAYLISTS: (state, newPlaylists) => {
-      state.allPlaylists = newPlaylists
+      var table = []
+      var i
+      for (i = 0; i < newPlaylists.length; i++) {
+        table.push({'name': newPlaylists[i]})
+      }
+      state.allPlaylists = table
     }
   },
   actions: {

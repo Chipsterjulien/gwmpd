@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div class="myNavBar" v-if="getConnectionStatus === true">
-      <b-navbar toggleable="md" class=navBar type="dark">
+      <b-navbar toggleable="md" class="navBar" type="dark">
         <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
         <b-navbar-brand>{{ appName }}</b-navbar-brand>
         <b-collapse is-nav id="nav_collapse">

@@ -1,25 +1,28 @@
 <template lang="html">
-  <div class="" v-if="getConnectionStatus === true">
-    <br>
-    <br>
+  <div class="positionning" v-if="getConnectionStatus === true">
+    <b-container class="addingPlaylist">
+      <b-input-group prepend="New name">
+        <b-form-input v-model="newPlaylist" @keyup.enter.native="addNewPlaylist"></b-form-input>
+        <b-input-group-append>
+          <b-button variant="info" @click="addNewPlaylist">Add</b-button>
+        </b-input-group-append>
+      </b-input-group>
+    </b-container>
 
-    <div class="">
-      <input type="text" placeholder="The new playlist's name" v-model="newPlaylist" @keyup.enter="addNewPlaylist">
-      <button type="button" @click="addNewPlaylist">Add new playlist</button>
-    </div>
-    <table>
-      <tr>
-        <th>#</th>
-        <th>Playlist's name</th>
-      </tr>
-      <tr v-for="(name, position) in allPlaylists" :key="position">
-        <td>{{ position + 1 }}</td>
-        <td><router-link :to="{ name: 'EditPlaylistView', params: {'playlistName': name } }">{{ name }}</router-link></td>
-        <td><button type="button" @click="clearAndLoadPlaylist(name)">Replace the playlist</button></td>
-        <td><button type="button" @click="loadPlaylist(name)">Append to playlist</button></td>
-        <td><button type="button" @click="removePlaylist(name)">Remove</button></td>
-      </tr>
-    </table>
+    <b-table stacked="md" striped hover :items="allPlaylists" :fields="fields">
+      <template slot="editPlaylist" slot-scope="data">
+        <b-button @click="editPlaylist(data.item.name)" class="icon-mode_edit"></b-button>
+      </template>
+      <template slot="replacePlaylist" slot-scope="data">
+        <b-button @click="clearAndLoadPlaylist(data.item.name)" class="icon-add"></b-button>
+      </template>
+      <template slot="appendPlaylist" slot-scope="data">
+        <b-button @click="loadPlaylist(data.item.name)" class="icon-queue_music"></b-button>
+      </template>
+      <template slot="removePlaylist" slot-scope="data">
+        <b-button @click="removePlaylist(data.item.name)" class="icon-delete"></b-button>
+      </template>
+    </b-table>
   </div>
 </template>
 
@@ -29,6 +32,12 @@ export default {
   name: 'PlaylistView',
   data () {
     return {
+      fields: [
+        {key: 'name', label: 'Playlist\'s name'},
+        {key: 'editPlaylist', label: ''},
+        {key: 'replacePlaylist', label: ''},
+        {key: 'appendPlaylist', label: ''},
+        {key: 'removePlaylist', label: ''}],
       newPlaylist: ''
     }
   },
@@ -44,6 +53,9 @@ export default {
       'setAllPlaylists'
     ]),
     addNewPlaylist () {
+      if (this.newPlaylist === '') {
+        return
+      }
       this.axios.post('v1/savePlaylist', {
         playlistName: this.newPlaylist
       })
@@ -57,6 +69,9 @@ export default {
         .then(response => {
           this.loadPlaylist(name)
         })
+    },
+    editPlaylist (playlistName) {
+      this.$router.push({ name: 'EditPlaylistView', params: {'playlistName': playlistName} })
     },
     loadAllPlaylists () {
       this.axios.get('v1/allPlaylists')
@@ -88,4 +103,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .addingPlaylist {
+    padding-bottom: 5px;
+  }
 </style>

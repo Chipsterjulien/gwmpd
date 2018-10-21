@@ -105,7 +105,6 @@ export default {
 
 <style lang="scss" scoped>
   .positionning {
-    padding-top: 5px;
     padding-bottom: 5px;
   }
 </style>

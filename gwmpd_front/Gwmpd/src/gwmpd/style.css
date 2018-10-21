@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'gwmpd';
-  src:  url('fonts/gwmpd.eot?yuslyo');
-  src:  url('fonts/gwmpd.eot?yuslyo#iefix') format('embedded-opentype'),
-    url('fonts/gwmpd.ttf?yuslyo') format('truetype'),
-    url('fonts/gwmpd.woff?yuslyo') format('woff'),
-    url('fonts/gwmpd.svg?yuslyo#gwmpd') format('svg');
+  src:  url('fonts/gwmpd.eot?q5etzj');
+  src:  url('fonts/gwmpd.eot?q5etzj#iefix') format('embedded-opentype'),
+    url('fonts/gwmpd.ttf?q5etzj') format('truetype'),
+    url('fonts/gwmpd.woff?q5etzj') format('woff'),
+    url('fonts/gwmpd.svg?q5etzj#gwmpd') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -40,8 +40,17 @@
 .icon-autorenew:before {
   content: "\e863";
 }
+.icon-clear_all:before {
+  content: "\e0b8";
+}
 .icon-mode_edit:before {
   content: "\e254";
+}
+.icon-delete:before {
+  content: "\e872";
+}
+.icon-find_replace:before {
+  content: "\e881";
 }
 .icon-format_align_left:before {
   content: "\e236";
@@ -57,9 +66,6 @@
 }
 .icon-keyboard_arrow_up:before {
   content: "\e316";
-}
-.icon-sync:before {
-  content: "\e627";
 }
 .icon-pause:before {
   content: "\e034";
@@ -79,8 +85,17 @@
 .icon-remove:before {
   content: "\e15b";
 }
+.icon-visibility:before {
+  content: "\e8f4";
+}
+.icon-repeat:before {
+  content: "\e040";
+}
 .icon-settings:before {
   content: "\e8b8";
+}
+.icon-shuffle:before {
+  content: "\e043";
 }
 .icon-skip_next:before {
   content: "\e044";
@@ -90,6 +105,9 @@
 }
 .icon-stop:before {
   content: "\e047";
+}
+.icon-visibility_off:before {
+  content: "\e8f5";
 }
 .icon-volume_down:before {
   content: "\e04d";
