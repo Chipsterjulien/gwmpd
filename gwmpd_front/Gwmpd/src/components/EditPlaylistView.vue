@@ -27,8 +27,8 @@
         <b-list-group-item v-for="(element, index) in playlist" :key="element.Order" class="d-flex justify-content-between align-items-center">
           <span class="toLongFilenameSong">{{ element.File }}</span>
           <div>
-            <b-badge v-if="element.Duration !== '0:00'" class="alignButtonToRight" pill>{{ element.Duration }}</b-badge>
-            <b-button @click="removeSong(index)" class="icon-delete alignButtonToRight"></b-button>
+            <b-badge v-if="element.Duration !== '0:00'" class="" pill>{{ element.Duration }}</b-badge>
+            <b-button @click="removeSong(index)" class="icon-delete"></b-button>
           </div>
         </b-list-group-item>
       </draggable>
@@ -56,14 +56,14 @@
         </b-input-group-append>
     </b-input-group>
 
-    <!-- Table of olders -->
+    <!-- Table of folders -->
     <div>
       <b-table stacked="md" striped hover v-if="available.directories.length > 0" :items="available.directories" :fields="directoriesFields">
         <template slot="nameFolder" slot-scope="data">
           <span class="toLongFilenameSong">{{ data.item.Name }}</span>
         </template>
         <template slot="button" slot-scope="data">
-          <div>
+          <div class="buttonAlignRight">
             <b-button @click="checkFilesList(data.item.Name)" class="icon-visibility"></b-button>
             <b-button @click="addSongToPlaylist(data.item.Name)" class="icon-create_new_folder"></b-button>
           </div>
@@ -81,44 +81,9 @@
           <span>{{ data.item.Duration }}</span>
         </template>
         <template slot="addSong" slot-scope="data">
-          <b-button @click="addSongToPlaylist(data.item.File)" class="icon-add alignButtonInTable"></b-button>
+          <b-button @click="addSongToPlaylist(data.item.File)" class="icon-add buttonAlignRight"></b-button>
         </template>
       </b-table>
-    </div>
-
-    <div class="">
-      <!-- <div class="">
-        <br>
-        Location: <span @click="pathDown">{{ location }}</span>
-      </div> -->
-      <!-- <div class="">
-        <table v-if="available.directories">
-          <tr>
-            <th>Directory's name</th>
-          </tr>
-          <tr v-for="(k, v) in available.directories" :key="v">
-            <td @click="checkFilesList(k)">{{ k }}</td>
-            <td><button type="button" @click="addSongToPlaylist(k)">add</button></td>
-          </tr>
-        </table>
-      </div> -->
-      <!-- <div class="">
-        <table v-if="available.songs.length">
-          <tr>
-            <th>File's name</th>
-            <th>Artist</th>
-            <th>Album</th>
-            <th>Duration</th>
-          </tr>
-          <tr v-for="(k, v) in available.songs" :key="v">
-            <td>{{ k.File }}</td>
-            <td>{{ k.Artist }}</td>
-            <td>{{ k.Album }}</td>
-            <td>{{ k.Time }}</td>
-            <td><button type="button" @click="addSongToPlaylist(k.File)">Add</button></td>
-          </tr>
-        </table>
-      </div> -->
     </div>
   </div>
 </template>
@@ -312,20 +277,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  .alignButtonInTable {
-    // float: right;
+  .buttonAlignRight {
+      float: right;
   }
 
-  .alignButtonToRight {
-    // display: flex;
-    // @media screen and (max-width: 768px) {
-    //   float: right;
-    //   // display: flex;
-    //   // flex-direction: column;
-    //   // margin-bottom: 3px;
-    //   // border: solid 1px;
-    // }
-  }
+  // .alignButtonToRight {
+  //   // display: flex;
+  //   // @media screen and (max-width: 768px) {
+  //   //   float: right;
+  //   //   // display: flex;
+  //   //   // flex-direction: column;
+  //   //   // margin-bottom: 3px;
+  //   //   // border: solid 1px;
+  //   // }
+  // }
 
   .saveClearButton {
     padding-top: 20px;
