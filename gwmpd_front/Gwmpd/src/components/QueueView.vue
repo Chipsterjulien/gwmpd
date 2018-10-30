@@ -12,6 +12,7 @@
         <h5 class="truncateLongText"><span v-if="currentSong.Artist !== ''">{{ currentSong.Artist }}</span><span v-else>&nbsp;</span></h5>
       </div>
     </b-container>
+
     <div class="musicSliderAndNumber" v-if="status.duration !== 0">
       <b-container fluid>
         <b-row class="currentSongState">
@@ -22,13 +23,14 @@
       <!-- Don't use b-form-input otherwise, music will be splited every seconds -->
       <input type="range" class="musicSlider" b-tooltip.hover :title="getMusicElapsed" min="0" :max="status.duration" v-model.number="musicValue"><br>
     </div>
-    <div class="">
+
+    <div>
       <b-table stacked="md" striped hover :items="currentPlaylist" :fields="fields">
         <template slot="File" slot-scope="data">
           <span class="toLongFilenameSong">{{ data.item.File }}</span>
         </template>
         <template slot="buttonPlayMusic" slot-scope="data">
-          <span v-if="currentSong.Id !== data.item.ID" class="buttonAlignRight"><b-button class="icon-play_arrow" @click="playSong(data.item.ID, data.item.Pos)"></b-button></span>
+          <span v-if="currentSong.Id !== data.item.ID" class="buttonAlignRight"><b-button v-b-tooltip.hover.top title="Play song" class="icon-play_arrow" @click="playSong(data.item.ID, data.item.Pos)"></b-button></span>
         </template>
       </b-table>
     </div>

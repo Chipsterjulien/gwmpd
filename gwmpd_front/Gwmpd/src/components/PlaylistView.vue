@@ -9,7 +9,7 @@
       </b-input-group>
     </b-container>
 
-    <b-table stacked="md" striped hover :items="allPlaylists" :fields="fields">
+    <b-table stacked="md" striped hover :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :items="allPlaylists" :fields="fields">
       <template slot="removePlaylist" slot-scope="data">
         <div class="alignButtonInTable">
           <b-button @click="editPlaylist(data.item.name)" class="icon-mode_edit"></b-button>
@@ -28,13 +28,10 @@ export default {
   name: 'PlaylistView',
   data () {
     return {
-      fields: [
-        {key: 'name', label: 'Playlist\'s name'},
-        // {key: 'editPlaylist', label: ''},
-        // {key: 'replacePlaylist', label: ''},
-        // {key: 'appendPlaylist', label: ''},
-        {key: 'removePlaylist', label: ''}],
-      newPlaylist: ''
+      fields: [{key: 'name', sortable: true, label: 'Playlist\'s name'}, {key: 'removePlaylist', label: ''}],
+      newPlaylist: '',
+      sortBy: 'name',
+      sortDesc: false
     }
   },
   computed: {
