@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'gwmpd';
-  src:  url('fonts/gwmpd.eot?q5etzj');
-  src:  url('fonts/gwmpd.eot?q5etzj#iefix') format('embedded-opentype'),
-    url('fonts/gwmpd.ttf?q5etzj') format('truetype'),
-    url('fonts/gwmpd.woff?q5etzj') format('woff'),
-    url('fonts/gwmpd.svg?q5etzj#gwmpd') format('svg');
+  src:  url('fonts/gwmpd.eot?aohtcz');
+  src:  url('fonts/gwmpd.eot?aohtcz#iefix') format('embedded-opentype'),
+    url('fonts/gwmpd.ttf?aohtcz') format('truetype'),
+    url('fonts/gwmpd.woff?aohtcz') format('woff'),
+    url('fonts/gwmpd.svg?aohtcz#gwmpd') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -40,17 +40,20 @@
 .icon-autorenew:before {
   content: "\e863";
 }
+.icon-close:before {
+  content: "\e5cd";
+}
 .icon-clear_all:before {
   content: "\e0b8";
 }
 .icon-mode_edit:before {
   content: "\e254";
 }
+.icon-create_new_folder:before {
+  content: "\e2cc";
+}
 .icon-delete:before {
   content: "\e872";
-}
-.icon-find_replace:before {
-  content: "\e881";
 }
 .icon-format_align_left:before {
   content: "\e236";
@@ -66,6 +69,12 @@
 }
 .icon-keyboard_arrow_up:before {
   content: "\e316";
+}
+.icon-sync:before {
+  content: "\e627";
+}
+.icon-open_in_browser:before {
+  content: "\e89d";
 }
 .icon-pause:before {
   content: "\e034";
@@ -91,6 +100,9 @@
 .icon-repeat:before {
   content: "\e040";
 }
+.icon-save:before {
+  content: "\e161";
+}
 .icon-settings:before {
   content: "\e8b8";
 }
@@ -105,6 +117,9 @@
 }
 .icon-stop:before {
   content: "\e047";
+}
+.icon-undo:before {
+  content: "\e166";
 }
 .icon-visibility_off:before {
   content: "\e8f5";

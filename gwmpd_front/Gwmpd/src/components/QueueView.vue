@@ -25,7 +25,7 @@
     <div class="">
       <b-table stacked="md" striped hover :items="currentPlaylist" :fields="fields">
         <template slot="File" slot-scope="data">
-          <span class="tooLongFilenameSong">{{ data.item.File }}</span>
+          <span class="toLongFilenameSong">{{ data.item.File }}</span>
         </template>
         <template slot="buttonPlayMusic" slot-scope="data">
           <span v-if="currentSong.Id !== data.item.ID"><b-button class="icon-play_arrow" @click="playSong(data.item.ID, data.item.Pos)"></b-button></span>
@@ -217,7 +217,7 @@ export default {
     cursor: pointer;
   }
 
-  .tooLongFilenameSong {
+  .toLongFilenameSong {
     word-break: break-all;
   }
 

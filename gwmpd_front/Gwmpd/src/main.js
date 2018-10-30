@@ -32,6 +32,9 @@ import bFormCheckboxGroup from 'bootstrap-vue/es/components/form-checkbox/form-c
 import vBTooltip from 'bootstrap-vue/es/directives/tooltip/tooltip'
 import bInputGroup from 'bootstrap-vue/es/components/input-group/input-group'
 import bInputGroupAppend from 'bootstrap-vue/es/components/input-group/input-group-append'
+import bListGroup from 'bootstrap-vue/es/components/list-group/list-group'
+import bListGroupItem from 'bootstrap-vue/es/components/list-group/list-group-item'
+import bBadge from 'bootstrap-vue/es/components/badge/badge'
 
 import App from './App'
 import router from './router'
@@ -68,6 +71,9 @@ Vue.component('b-table', bTable)
 Vue.directive('b-tooltip', vBTooltip)
 Vue.component('b-input-group', bInputGroup)
 Vue.component('b-input-group-append', bInputGroupAppend)
+Vue.component('b-list-group', bListGroup)
+Vue.component('b-list-group-item', bListGroupItem)
+Vue.component('b-badge', bBadge)
 
 Vue.use(VueAxios, axios)
 Vue.axios.defaults.baseURL = 'http://localhost:8060'

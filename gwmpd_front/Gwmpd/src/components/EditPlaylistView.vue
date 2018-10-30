@@ -1,48 +1,97 @@
 <template lang="html">
+  <!--  -->
+  <!-- Regarder ici pour le dragNdrop -->
+  <!-- https://github.com/SortableJS/Vue.Draggable -->
+  <!--  -->
+
   <div class="" v-if="getConnectionStatus === true">
-    <br>
-    <br>
-    Nom: {{ playlistName }}
-    <br>
-    <button type="button" @click="clearPlaylist">Clear</button><br>
-    <input type="text" v-model="newPlaylistName">
-    <button type="button" @click="renamePlaylist">Rename</button><br>
-    <br>
-    <div class="">
-      <form class="" @submit.prevent="addURL">
-        <label for="urlWebRadio">Webradio's URL</label>
-        <input v-model="webradioURL" type="text" id="urlWebRadio">
-        <button type="submit">add</button>
-      </form>
+    <b-container>
+      <b-input-group>
+        <b-form-input v-model="newPlaylistName" @keyup.enter.native="renamePlaylist" :readonly="isReadOnly"></b-form-input>
+        <b-input-group-append v-if="isReadOnly">
+          <b-button variant="primary" @click="canEditPlaylistName" class="icon-mode_edit"></b-button>
+        </b-input-group-append>
+        <b-input-group-append v-else>
+          <b-button variant="primary" @click="renamePlaylist" class="icon-save"></b-button>
+          <b-button variant="primary" @click="cancelEditPlaylistName" class="icon-close"></b-button>
+        </b-input-group-append>
+      </b-input-group>
+    </b-container>
+
+    <div class="saveClearButton" align="right">
+      <b-button size="lg" v-b-tooltip.hover.top title="Clear playlist" variant="danger" @click="clearPlaylist" class="icon-clear_all"></b-button>
     </div>
+
+    <b-list-group>
+      <draggable :list="playlist" :move="onMove" @start="isDragging=true" @end="isDragging=false">
+        <b-list-group-item v-for="(element, index) in playlist" :key="element.Order" class="d-flex justify-content-between align-items-center">
+          <span class="toLongFilenameSong">{{ element.File }}</span>
+          <div>
+            <b-badge v-if="element.Duration !== '0:00'" class="alignButtonToRight" pill>{{ element.Duration }}</b-badge>
+            <b-button @click="removeSong(index)" class="icon-delete alignButtonToRight"></b-button>
+          </div>
+        </b-list-group-item>
+      </draggable>
+    </b-list-group>
     <br>
-    <div class="">
-      <table v-if="playlist.length">
-        <tr>
-          <th>#</th>
-          <th>File</th>
-          <th>Song's name</th>
-          <th>Duration</th>
-        </tr>
-        <tr v-for="(k, v) in playlist" :key="v">
-          <td>{{ v + 1 }}</td>
-          <td>{{ k.File }}</td>
-          <td>{{ k.Title }}</td>
-          <td>{{ k.Time }}</td>
-          <td><button type="button" v-if="v !== 0" @click="moveTop(v)">Top</button></td>
-          <td><button type="button" v-if="v < playlist.length - 1" @click="moveBottom(v)">Bottom</button></td>
-          <td><button type="button" v-if="v !== 0" @click="moveUp(v)">Up</button></td>
-          <td><button type="button" v-if="v < playlist.length - 1" @click="moveDown(v)">Down</button></td>
-          <td><button type="button" @click="removeSong(v)">Remove</button></td>
-        </tr>
-      </table>
+
+    <hr>
+
+    <b-form-group>
+      <b-input-group prepend="web's URL">
+        <b-form-input v-model="webradioURL" @keyup.enter.native="addURL"></b-form-input>
+        <b-input-group-append>
+          <b-button @click="addURL" class="icon-add"></b-button>
+        </b-input-group-append>
+      </b-input-group>
+    </b-form-group>
+
+    <hr>
+
+    <b-input-group prepend="Location">
+      <b-form-input v-model="location" placeholder="/" readonly></b-form-input>
+      <b-input-group-append>
+          <b-button @click="pathDown" v-if="location === ''" class="icon-undo" disabled></b-button>
+          <b-button @click="pathDown" v-else class="icon-undo"></b-button>
+        </b-input-group-append>
+    </b-input-group>
+
+    <!-- Table of olders -->
+    <div>
+      <b-table stacked="md" striped hover v-if="available.directories.length > 0" :items="available.directories" :fields="directoriesFields">
+        <template slot="nameFolder" slot-scope="data">
+          <span class="toLongFilenameSong">{{ data.item.Name }}</span>
+        </template>
+        <template slot="button" slot-scope="data">
+          <div>
+            <b-button @click="checkFilesList(data.item.Name)" class="icon-visibility"></b-button>
+            <b-button @click="addSongToPlaylist(data.item.Name)" class="icon-create_new_folder"></b-button>
+          </div>
+        </template>
+      </b-table>
     </div>
+
+    <!-- Table of songs -->
+    <div>
+      <b-table stacked="md" striped hover v-if="available.songs.length > 0" :items="available.songs" :fields="songsFields">
+        <template slot="Song" slot-scope="data">
+          <span class="toLongFilenameSong">{{ data.item.File }}</span>
+        </template>
+        <template slot="Duration" slot-scope="data">
+          <span>{{ data.item.Duration }}</span>
+        </template>
+        <template slot="addSong" slot-scope="data">
+          <b-button @click="addSongToPlaylist(data.item.File)" class="icon-add alignButtonInTable"></b-button>
+        </template>
+      </b-table>
+    </div>
+
     <div class="">
-      <div class="">
+      <!-- <div class="">
         <br>
         Location: <span @click="pathDown">{{ location }}</span>
-      </div>
-      <div class="">
+      </div> -->
+      <!-- <div class="">
         <table v-if="available.directories">
           <tr>
             <th>Directory's name</th>
@@ -52,8 +101,8 @@
             <td><button type="button" @click="addSongToPlaylist(k)">add</button></td>
           </tr>
         </table>
-      </div>
-      <div class="">
+      </div> -->
+      <!-- <div class="">
         <table v-if="available.songs.length">
           <tr>
             <th>File's name</th>
@@ -69,14 +118,18 @@
             <td><button type="button" @click="addSongToPlaylist(k.File)">Add</button></td>
           </tr>
         </table>
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import draggable from 'vuedraggable'
 export default {
+  components: {
+    draggable
+  },
   name: 'EditPlaylistView',
   data () {
     return {
@@ -84,10 +137,15 @@ export default {
         directories: [],
         songs: []
       },
+      directoriesFields: [{key: 'nameFolder', label: 'Folder'}, {key: 'button', label: ''}],
+      isDragging: false,
+      isReadOnly: true,
       location: '',
       newPlaylistName: '',
       playlist: [],
       playlistName: '',
+      songsFields: [{key: 'Song', label: 'Filename'}, 'Duration', {key: 'addSong', label: ''}],
+      songOnMove: {},
       webradioURL: ''
     }
   },
@@ -97,6 +155,9 @@ export default {
     })
   },
   methods: {
+    onMove ({ relatedContext, draggedContext }) {
+      this.songOnMove = draggedContext
+    },
     addSongToPlaylist (filename) {
       if (this.location !== '') {
         filename = this.location + '/' + filename
@@ -110,13 +171,23 @@ export default {
         })
     },
     addURL () {
-      this.axios.post('v1/addSongToPlaylist', {
-        songFilename: this.webradioURL,
-        playlistName: this.playlistName
-      })
-        .then(response => {
-          this.getPlaylist()
+      if (this.webradioURL !== '') {
+        this.axios.post('v1/addSongToPlaylist', {
+          songFilename: this.webradioURL,
+          playlistName: this.playlistName
         })
+          .then(response => {
+            this.getPlaylist()
+            this.webradioURL = ''
+          })
+      }
+    },
+    canEditPlaylistName () {
+      this.isReadOnly = false
+    },
+    cancelEditPlaylistName () {
+      this.isReadOnly = true
+      this.newPlaylistName = this.playlistName
     },
     checkFilesList (loc) {
       if (this.location === '') {
@@ -124,6 +195,7 @@ export default {
       } else {
         this.location += '/' + loc
       }
+
       this.getFilesList()
     },
     clearPlaylist () {
@@ -132,56 +204,57 @@ export default {
           this.playlist = {}
         })
     },
+    convertSecondsToString (time) {
+      // Hours, minutes and seconds
+      var hrs = ~~(time / 3600)
+      var mins = ~~((time % 3600) / 60)
+      var secs = ~~time % 60
+
+      // Output like "1:01" or "4:03:59" or "123:03:59"
+      var ret = ''
+
+      if (hrs > 0) {
+        ret += '' + hrs + ':' + (mins < 10 ? '0' : '')
+      }
+
+      ret += '' + mins + ':' + (secs < 10 ? '0' : '')
+      ret += '' + secs
+
+      return ret
+    },
     getFilesList () {
       this.axios.get('v1/filesList', {params: {location: this.location}})
         .then(response => {
           this.available = response.data
+          var tmp = []
+          var i
+          for (i = 0; i < this.available.directories.length; i++) {
+            tmp.push({'Name': this.available.directories[i]})
+          }
+          this.available.directories = tmp
+          tmp = []
+
+          for (i = 0; i < this.available.songs.length; i++) {
+            this.available.songs[i].Duration = this.convertSecondsToString(this.available.songs[i].Duration)
+          }
         })
+    },
+    getMusicName (filename) {
+      var filenameSplitted = filename.split('/')
+
+      return filenameSplitted[filenameSplitted.length - 1]
     },
     getPlaylist () {
       this.axios.get('v1/playlistSongsList', {params: {playlistName: this.playlistName}})
         .then(response => {
+          var i
+
           this.playlist = response.data
-        })
-    },
-    moveBottom (actualPos) {
-      this.axios.post('v1/moveSong', {
-        playlistName: this.playlistName,
-        oldPos: actualPos,
-        newPos: this.playlist.length - 1
-      })
-        .then(response => {
-          this.getPlaylist()
-        })
-    },
-    moveTop (actualPos) {
-      this.axios.post('v1/moveSong', {
-        playlistName: this.playlistName,
-        oldPos: actualPos,
-        newPos: 0
-      })
-        .then(response => {
-          this.getPlaylist()
-        })
-    },
-    moveDown (actualPos) {
-      this.axios.post('v1/moveSong', {
-        playlistName: this.playlistName,
-        oldPos: actualPos,
-        newPos: actualPos + 1
-      })
-        .then(response => {
-          this.getPlaylist()
-        })
-    },
-    moveUp (actualPos) {
-      this.axios.post('v1/moveSong', {
-        playlistName: this.playlistName,
-        oldPos: actualPos,
-        newPos: actualPos - 1
-      })
-        .then(response => {
-          this.getPlaylist()
+          for (i = 0; i < this.playlist.length; i++) {
+            this.playlist[i].Order = i
+            this.playlist[i].Duration = this.convertSecondsToString(this.playlist[i].Duration)
+            // this.playlist[i].Name = this.getMusicName(this.playlist[i].File)
+          }
         })
     },
     pathDown () {
@@ -201,6 +274,7 @@ export default {
         })
     },
     renamePlaylist () {
+      this.isReadOnly = true
       this.axios.post('v1/renamePlaylist', {
         oldName: this.playlistName,
         newName: this.newPlaylistName
@@ -208,7 +282,24 @@ export default {
         .then(response => {
           this.playlistName = response.data.newName
           this.newPlaylistName = this.playlistName
+          this.$router.push({ name: 'EditPlaylistView', params: {'playlistName': this.newPlaylistName} })
         })
+    }
+  },
+  watch: {
+    isDragging (newValue) {
+      if (newValue === false) {
+        if (this.songOnMove.index !== this.songOnMove.futureIndex) {
+          this.axios.post('v1/moveSong', {
+            playlistName: this.playlistName,
+            oldPos: this.songOnMove.index,
+            newPos: this.songOnMove.futureIndex
+          })
+            .then(response => {
+              this.getPlaylist()
+            })
+        }
+      }
     }
   },
   mounted () {
@@ -221,4 +312,27 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .alignButtonInTable {
+    // float: right;
+  }
+
+  .alignButtonToRight {
+    // display: flex;
+    // @media screen and (max-width: 768px) {
+    //   float: right;
+    //   // display: flex;
+    //   // flex-direction: column;
+    //   // margin-bottom: 3px;
+    //   // border: solid 1px;
+    // }
+  }
+
+  .saveClearButton {
+    padding-top: 20px;
+    padding-bottom: 3px;
+  }
+
+  .toLongFilenameSong {
+    word-break: break-all;
+  }
 </style>

@@ -10,17 +10,13 @@
     </b-container>
 
     <b-table stacked="md" striped hover :items="allPlaylists" :fields="fields">
-      <template slot="editPlaylist" slot-scope="data">
-        <b-button @click="editPlaylist(data.item.name)" class="icon-mode_edit"></b-button>
-      </template>
-      <template slot="replacePlaylist" slot-scope="data">
-        <b-button @click="clearAndLoadPlaylist(data.item.name)" class="icon-add"></b-button>
-      </template>
-      <template slot="appendPlaylist" slot-scope="data">
-        <b-button @click="loadPlaylist(data.item.name)" class="icon-queue_music"></b-button>
-      </template>
       <template slot="removePlaylist" slot-scope="data">
-        <b-button @click="removePlaylist(data.item.name)" class="icon-delete"></b-button>
+        <div class="alignButtonInTable">
+          <b-button @click="editPlaylist(data.item.name)" class="icon-mode_edit"></b-button>
+          <b-button @click="clearAndLoadPlaylist(data.item.name)" class="icon-add"></b-button>
+          <b-button @click="loadPlaylist(data.item.name)" class="icon-queue_music"></b-button>
+          <b-button @click="removePlaylist(data.item.name)" class="icon-delete"></b-button>
+        </div>
       </template>
     </b-table>
   </div>
@@ -34,9 +30,9 @@ export default {
     return {
       fields: [
         {key: 'name', label: 'Playlist\'s name'},
-        {key: 'editPlaylist', label: ''},
-        {key: 'replacePlaylist', label: ''},
-        {key: 'appendPlaylist', label: ''},
+        // {key: 'editPlaylist', label: ''},
+        // {key: 'replacePlaylist', label: ''},
+        // {key: 'appendPlaylist', label: ''},
         {key: 'removePlaylist', label: ''}],
       newPlaylist: ''
     }
@@ -105,5 +101,9 @@ export default {
 <style lang="scss" scoped>
   .addingPlaylist {
     padding-bottom: 5px;
+  }
+
+  .alignButtonInTable {
+    float: right;
   }
 </style>
