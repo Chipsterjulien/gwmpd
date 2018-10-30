@@ -9,11 +9,11 @@
       <b-input-group>
         <b-form-input v-model="newPlaylistName" @keyup.enter.native="renamePlaylist" :readonly="isReadOnly"></b-form-input>
         <b-input-group-append v-if="isReadOnly">
-          <b-button variant="primary" @click="canEditPlaylistName" class="icon-mode_edit"></b-button>
+          <b-button v-b-tooltip.hover.top title="Edit playlist's name" variant="primary" @click="canEditPlaylistName" class="icon-mode_edit"></b-button>
         </b-input-group-append>
         <b-input-group-append v-else>
-          <b-button variant="primary" @click="renamePlaylist" class="icon-save"></b-button>
-          <b-button variant="primary" @click="cancelEditPlaylistName" class="icon-close"></b-button>
+          <b-button v-b-tooltip.hover.top title="Save" variant="primary" @click="renamePlaylist" class="icon-save"></b-button>
+          <b-button v-b-tooltip.hover.top title="Cancel" variant="primary" @click="cancelEditPlaylistName" class="icon-close"></b-button>
         </b-input-group-append>
       </b-input-group>
     </b-container>
@@ -26,9 +26,9 @@
       <draggable :list="playlist" :move="onMove" @start="isDragging=true" @end="isDragging=false">
         <b-list-group-item v-for="(element, index) in playlist" :key="element.Order" class="d-flex justify-content-between align-items-center">
           <span class="toLongFilenameSong">{{ element.File }}</span>
-          <div>
-            <b-badge v-if="element.Duration !== '0:00'" class="" pill>{{ element.Duration }}</b-badge>
-            <b-button @click="removeSong(index)" class="icon-delete"></b-button>
+          <div class="buttonAlignRightInListGroup">
+            <b-badge v-if="element.Duration !== '0:00'" class="addSpace" pill>{{ element.Duration }}</b-badge>
+            <b-button v-b-tooltip.hover.top title="Remove from playlist" @click="removeSong(index)" class="icon-delete"></b-button>
           </div>
         </b-list-group-item>
       </draggable>
@@ -41,7 +41,7 @@
       <b-input-group prepend="web's URL">
         <b-form-input v-model="webradioURL" @keyup.enter.native="addURL"></b-form-input>
         <b-input-group-append>
-          <b-button @click="addURL" class="icon-add"></b-button>
+          <b-button v-b-tooltip.hover.top title="Add a web url" @click="addURL" class="icon-add"></b-button>
         </b-input-group-append>
       </b-input-group>
     </b-form-group>
@@ -52,7 +52,7 @@
       <b-form-input v-model="location" placeholder="/" readonly></b-form-input>
       <b-input-group-append>
           <b-button @click="pathDown" v-if="location === ''" class="icon-undo" disabled></b-button>
-          <b-button @click="pathDown" v-else class="icon-undo"></b-button>
+          <b-button v-b-tooltip.hover.top title="Go back in the tree" @click="pathDown" v-else class="icon-undo"></b-button>
         </b-input-group-append>
     </b-input-group>
 
@@ -64,8 +64,8 @@
         </template>
         <template slot="button" slot-scope="data">
           <div class="buttonAlignRight">
-            <b-button @click="checkFilesList(data.item.Name)" class="icon-visibility"></b-button>
-            <b-button @click="addSongToPlaylist(data.item.Name)" class="icon-create_new_folder"></b-button>
+            <b-button v-b-tooltip.hover.top title="Go inside" @click="checkFilesList(data.item.Name)" class="icon-visibility"></b-button>
+            <b-button v-b-tooltip.hover.top title="Add all the songs from the folder" @click="addSongToPlaylist(data.item.Name)" class="icon-create_new_folder"></b-button>
           </div>
         </template>
       </b-table>
@@ -81,7 +81,7 @@
           <span>{{ data.item.Duration }}</span>
         </template>
         <template slot="addSong" slot-scope="data">
-          <b-button @click="addSongToPlaylist(data.item.File)" class="icon-add buttonAlignRight"></b-button>
+          <b-button v-b-tooltip.hover.top title="Add song" @click="addSongToPlaylist(data.item.File)" class="icon-add buttonAlignRight"></b-button>
         </template>
       </b-table>
     </div>
@@ -277,20 +277,29 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .addSpace {
+    margin-right: 3px;
+
+    @media screen and (max-width: 768px) {
+      margin-bottom: 4px;
+    }
+  }
+
   .buttonAlignRight {
       float: right;
   }
 
-  // .alignButtonToRight {
-  //   // display: flex;
-  //   // @media screen and (max-width: 768px) {
-  //   //   float: right;
-  //   //   // display: flex;
-  //   //   // flex-direction: column;
-  //   //   // margin-bottom: 3px;
-  //   //   // border: solid 1px;
-  //   // }
-  // }
+  .buttonAlignRightInListGroup {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    @media screen and (max-width: 768px) {
+      display: flex;
+      flex-direction: column;
+      margin-left: 14px;
+    }
+  }
 
   .saveClearButton {
     padding-top: 20px;

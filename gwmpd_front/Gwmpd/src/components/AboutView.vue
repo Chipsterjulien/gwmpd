@@ -1,6 +1,6 @@
 <template lang="html">
   <div class="text-center topSpace">
-    <b-container fluid class="mx-auto">
+    <b-container fluid class="mx-auto backgroundAndRoundedBox">
       <h2>Gwmpd</h2>
       <span class="text-primary">Freyermuth Julien</span><br>
       Copyright © 2018<br>
@@ -29,6 +29,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .backgroundAndRoundedBox {
+    background-color: white;
+    border-radius: 25px;
+  }
   .donate{
     margin-top: 20px;
   }
