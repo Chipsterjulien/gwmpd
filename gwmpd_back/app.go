@@ -15,6 +15,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+var identityKey = "id"
+
+// User auie
+type User struct {
+	Username string
+}
+
 func initGin(com *com) {
 	log := logging.MustGetLogger("log")
 
@@ -34,20 +41,33 @@ func initGin(com *com) {
 	}))
 
 	// the jwt middleware
-	authMiddleware := &jwt.GinJWTMiddleware{
-		Realm:         "Restricted zone",
-		Key:           []byte(viper.GetString("ginserver.jwtSecretKey")),
-		Timeout:       time.Minute,
-		MaxRefresh:    time.Minute,
-		Authenticator: authenticator,
-		Authorizator:  refreshToken,
-		Unauthorized:  unauthorized,
-		TokenLookup:   "header:Authorization",
-		TokenHeadName: "Bearer",
-		TimeFunc:      time.Now,
+	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
+		Realm:           "Restricted zone",
+		Key:             []byte(viper.GetString("ginserver.jwtSecretKey")),
+		Timeout:         time.Minute,
+		MaxRefresh:      time.Minute,
+		IdentityKey:     identityKey,
+		PayloadFunc:     payloadFunc,
+		IdentityHandler: identityHandler,
+		Authenticator:   authenticator,
+		Authorizator:    refreshToken,
+		Unauthorized:    unauthorized,
+		TokenLookup:     "header:Authorization",
+		TokenHeadName:   "Bearer",
+		TimeFunc:        time.Now,
+	})
+	if err != nil {
+		log.Critical("JWT Error: " + err.Error())
+		os.Exit(1)
 	}
 
 	g.POST("/login", authMiddleware.LoginHandler)
+
+	g.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
+		claims := jwt.ExtractClaims(c)
+		log.Debugf("NoRoute claims: %#v\n", claims)
+		c.JSON(404, gin.H{"code": 404, "message": "Page not found"})
+	})
 
 	auth := g.Group("/v1")
 	auth.Use(authMiddleware.MiddlewareFunc())
@@ -78,7 +98,6 @@ func initGin(com *com) {
 		auth.GET("/stopSong", com.getStopSong)
 		auth.PUT("/toggleConsume", com.toggleConsume)
 		auth.PUT("/toggleRandom", com.toggleRandom)
-		// auth.PUT("/toggleSingle", com.toggleSingle)
 		auth.PUT("/toggleRepeat", com.toggleRepeat)
 		auth.PUT("/toggleMuteVolume", com.toggleMuteVolume)
 		auth.GET("/updateDB", com.updateDB)
