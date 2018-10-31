@@ -5,8 +5,7 @@ There are 2 parts:
 * the backend which written in Go. It communicates with mpd and web GUI
 * the frontend which written in JS (vuejs)
 
-__Rest API is now secure with JWT token but you MUST use it over https__  
-__GUI is still ugly__
+__Rest API is now secure with JWT token but you SHOULD use it over https__  
 
 ## Dependencies
 These programs are only useful for build backend and frontend:
@@ -22,6 +21,8 @@ cd gwmpd/
 chmod +x auto_build.sh
 ./auto_build.sh
 ```
+
+Build JS is somethimes very long so you can take a coffee ;-)
 
 ### Backend
 After building, move gwmpdBack to your /usr/bin as follow:
@@ -56,7 +57,7 @@ Edit /etc/gwmpd/gwmpd.toml by changing:
 * your new jwtSecretKey
 * login and password of course
 
-If you expose gwmpdBack to the web (__YOU MUST USE HTTPS__), open ginserver's port on your server by modifying your firewall and don't forget to redirect port on your modem
+If you expose gwmpdBack to the web __YOU SHOULD USE HTTPS__, open ginserver's port on your server by modifying your firewall and don't forget to redirect port on your modem
 
 ## Starting
 Start mpd server, start /usr/bin/gwmpdBack, open your browser and finally go to your server
