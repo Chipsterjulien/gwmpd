@@ -1,10 +1,10 @@
 <template lang="html">
   <div class="positionning" v-if="getConnectionStatus === true">
     <b-container class="addingPlaylist">
-      <b-input-group prepend="New name">
+      <b-input-group prepend="New playlist's name">
         <b-form-input v-model="newPlaylist" @keyup.enter.native="addNewPlaylist"></b-form-input>
         <b-input-group-append>
-          <b-button variant="info" @click="addNewPlaylist">Add</b-button>
+          <b-button variant="info" v-b-tooltip.hover.top title="Create a new playlist" @click="addNewPlaylist">Add</b-button>
         </b-input-group-append>
       </b-input-group>
     </b-container>

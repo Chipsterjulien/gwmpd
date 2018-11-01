@@ -104,9 +104,22 @@ func initGin(com *com) {
 	}
 
 	log.Debugf("Port: %d", viper.GetInt("ginserver.port"))
-	if err := g.Run(":" + strconv.Itoa(viper.GetInt("ginserver.port"))); err != nil {
-		log.Criticalf("Unable to start server: %s", err)
-		os.Exit(1)
+
+	pem := viper.GetString("ginserver.pem")
+	key := viper.GetString("ginserver.key")
+
+	if pem != "" && key != "" {
+		if err := g.RunTLS(":"+strconv.Itoa(viper.GetInt("ginserver.port")), pem, key); err != nil {
+			log.Criticalf("Unable to start TLS server: %s", err)
+			log.Criticalf("PEM: %s\n", pem)
+			log.Criticalf("KEY: %s\n", key)
+			os.Exit(1)
+		}
+	} else {
+		if err := g.Run(":" + strconv.Itoa(viper.GetInt("ginserver.port"))); err != nil {
+			log.Criticalf("Unable to start server: %s", err)
+			os.Exit(1)
+		}
 	}
 }
 
