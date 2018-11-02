@@ -12,10 +12,10 @@
     <b-table stacked="md" striped hover :sort-by.sync="sortBy" :sort-desc.sync="sortDesc" :items="allPlaylists" :fields="fields">
       <template slot="removePlaylist" slot-scope="data">
         <div class="alignButtonInTable">
-          <b-button @click="editPlaylist(data.item.name)" class="icon-mode_edit"></b-button>
-          <b-button @click="clearAndLoadPlaylist(data.item.name)" class="icon-add"></b-button>
-          <b-button @click="loadPlaylist(data.item.name)" class="icon-queue_music"></b-button>
-          <b-button @click="removePlaylist(data.item.name)" class="icon-delete"></b-button>
+          <b-button v-b-tooltip.hover.top title="Edit playlist" @click="editPlaylist(data.item.name)" class="icon-mode_edit"></b-button>
+          <b-button v-b-tooltip.hover.top title="Replace the current playlist by this one" @click="clearAndLoadPlaylist(data.item.name)" class="icon-add"></b-button>
+          <b-button v-b-tooltip.hover.top title="Add this to current playlist" @click="loadPlaylist(data.item.name)" class="icon-queue_music"></b-button>
+          <b-button v-b-tooltip.hover.top title="Remove this playlist" @click="removePlaylist(data.item.name)" class="icon-delete"></b-button>
         </div>
       </template>
     </b-table>

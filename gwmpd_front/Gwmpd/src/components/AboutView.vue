@@ -4,7 +4,6 @@
       <h2>Gwmpd</h2>
       <span class="text-primary">Freyermuth Julien</span><br>
       Copyright © 2018<br>
-      <!-- <a href="https://en.wikipedia.org/wiki/BSD_licenses" target="_blank">BSD License</a> -->
 
       <a href="https://en.wikipedia.org/wiki/BSD_licenses" target="_blank"><b-img class="licenseImg" src="../assets/license.png" alt="Open Source logo"></b-img></a>
 
@@ -24,7 +23,7 @@
 
 <script>
 export default {
-  name: 'about'
+  name: 'AboutView'
 }
 </script>
 

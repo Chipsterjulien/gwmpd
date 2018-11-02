@@ -164,6 +164,11 @@ export default {
     }
   },
   mounted () {
+    if (localStorage.url !== 'undefined') {
+      this.url = localStorage.url
+      this.axios.defaults.baseURL = this.url
+    }
+
     if (this.$auth.watch.authenticated) {
       // refresh token if F5 was sent
       this.refresh()

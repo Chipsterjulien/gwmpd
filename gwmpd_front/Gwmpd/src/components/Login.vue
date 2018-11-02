@@ -84,8 +84,6 @@ export default {
     }
   },
   mounted () {
-    console.log('mounted Login.vue')
-
     if (localStorage.url !== 'undefined') {
       this.url = localStorage.url
       this.axios.defaults.baseURL = this.url
