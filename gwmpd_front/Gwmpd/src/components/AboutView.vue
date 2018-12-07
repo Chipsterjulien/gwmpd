@@ -1,5 +1,5 @@
 <template lang="html">
-  <div class="text-center topSpace">
+  <div class="text-center topSpace" v-if="getConnectionStatus === true">
     <b-container fluid class="mx-auto backgroundAndRoundedBox">
       <h2>Gwmpd</h2>
       <span class="text-primary">Freyermuth Julien</span><br>
@@ -22,8 +22,14 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 export default {
-  name: 'AboutView'
+  name: 'AboutView',
+  computed: {
+    ...mapGetters({
+      getConnectionStatus: 'getConnectionStatus'
+    })
+  }
 }
 </script>
 

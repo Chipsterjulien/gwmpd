@@ -1,4 +1,4 @@
-<template>
+<template lang="html">
   <div id="app">
     <div class="myNavBar" v-if="getConnectionStatus === true">
       <b-navbar toggleable="md" class="navBar" type="dark">
@@ -8,6 +8,7 @@
           <b-navbar-nav>
             <b-nav-item :to="{ name: 'QueueView', params: {} }">Queue</b-nav-item>
             <b-nav-item :to="{ name: 'PlaylistView', params: {} }">Playlists</b-nav-item>
+            <b-nav-item :to="{ name: 'LocalMusicsView', params: {} }">Local musics</b-nav-item>
             <b-nav-item :to="{ name: 'ConfigView', params: {} }" disabled>Config</b-nav-item>
             <b-nav-item :to="{ name: 'AboutView', params: {} }">About</b-nav-item>
           </b-navbar-nav>
@@ -103,26 +104,6 @@ export default {
       'setPlaylist',
       'setState'
     ]),
-    // lessVolume () {
-    //   if (this.getStatus.volume >= 5) {
-    //     this.axios.post('v1/setVolume', {
-    //       volume: this.getStatus.volume - 5
-    //     })
-    //       .then(response => {
-    //         this.setVolume(response.data.volume)
-    //       })
-    //   }
-    // },
-    // moreVolume () {
-    //   if (this.getStatus.volume <= 95) {
-    //     this.axios.post('v1/setVolume', {
-    //       volume: this.getStatus.volume + 5
-    //     })
-    //       .then(response => {
-    //         this.setVolume(response.data.volume)
-    //       })
-    //   }
-    // },
     toggleMuteVolume () {
       this.axios.put('v1/toggleMuteVolume')
         .then(response => {

@@ -1,9 +1,4 @@
 <template lang="html">
-  <!--  -->
-  <!-- Regarder ici pour le dragNdrop -->
-  <!-- https://github.com/SortableJS/Vue.Draggable -->
-  <!--  -->
-
   <div class="" v-if="getConnectionStatus === true">
     <b-container>
       <b-input-group>
@@ -218,7 +213,6 @@ export default {
           for (i = 0; i < this.playlist.length; i++) {
             this.playlist[i].Order = i
             this.playlist[i].Duration = this.convertSecondsToString(this.playlist[i].Duration)
-            // this.playlist[i].Name = this.getMusicName(this.playlist[i].File)
           }
         })
     },

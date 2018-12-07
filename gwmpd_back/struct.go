@@ -71,6 +71,10 @@ type addSongForm struct {
 	PlaylistName string `form:"playlistName" binding:"required"`
 }
 
+type addSongToCurrentPlaylistForm struct {
+	SongFilename string `form:"songFilename" binding:"required"`
+}
+
 type locationForm struct {
 	Location string `form:"location" binding:"required"`
 }

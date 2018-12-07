@@ -17,11 +17,6 @@ import (
 
 var identityKey = "id"
 
-// User auie
-type User struct {
-	Username string
-}
-
 func initGin(com *com) {
 	log := logging.MustGetLogger("log")
 
@@ -72,10 +67,11 @@ func initGin(com *com) {
 	auth := g.Group("/v1")
 	auth.Use(authMiddleware.MiddlewareFunc())
 	{
+		auth.POST("/addSongToCurrentPlaylist", com.addSongToCurrentPlaylist)
 		auth.POST("/addSongToPlaylist", com.addSongToPlaylist)
 		auth.GET("/allPlaylists", com.getAllPlaylists)
-		auth.POST("/clearPlaylist", com.clearPlaylist)
 		auth.GET("/clearCurrentPlaylist", com.getClearCurrentPlaylist)
+		auth.POST("/clearPlaylist", com.clearPlaylist)
 		auth.GET("/currentPlaylist", com.getCurrentPlaylist)
 		auth.GET("/currentSong", com.getCurrentSong)
 		auth.GET("/filesList", com.getFilesList)
@@ -164,13 +160,13 @@ func startApp() {
 }
 
 func main() {
-	confPath := "/etc/gwmpd"
-	confFilename := "gwmpd"
-	logFilename := "/var/log/gwmpd/error.log"
+	// confPath := "/etc/gwmpd"
+	// confFilename := "gwmpd"
+	// logFilename := "/var/log/gwmpd/error.log"
 
-	// confPath := "cfg/"
-	// confFilename := "gwmpd_sample"
-	// logFilename := "error.log"
+	confPath := "cfg/"
+	confFilename := "gwmpd_sample"
+	logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()

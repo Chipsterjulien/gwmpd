@@ -37,10 +37,12 @@ const currentPlaylist = {
   },
   mutations: {
     SET_PLAYLIST: (state, newPlaylist) => {
-      var i
-      for (i = 0; i < newPlaylist.length; i++) {
-        newPlaylist[i].Duration = convertSecondsToString(newPlaylist[i].Duration)
-        newPlaylist[i].File = getMusicName(newPlaylist[i].File)
+      if (newPlaylist !== {}) {
+        var i
+        for (i = 0; i < newPlaylist.length; i++) {
+          newPlaylist[i].Duration = convertSecondsToString(newPlaylist[i].Duration)
+          newPlaylist[i].File = getMusicName(newPlaylist[i].File)
+        }
       }
       state.playlist = newPlaylist
     }

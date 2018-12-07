@@ -5,6 +5,7 @@ import QueueView from '@/components/QueueView'
 import SideBarView from '@/components/SideBarView'
 import PlaylistView from '@/components/PlaylistView'
 import EditPlaylistView from '@/components/EditPlaylistView'
+import LocalMusicsView from '@/components/LocalMusicsView'
 import AboutView from '@/components/AboutView'
 
 Vue.use(Router)
@@ -28,6 +29,7 @@ export default new Router({
     }, {
       path: '/about',
       name: 'AboutView',
+      meta: {auth: true},
       components: {
         default: AboutView
       }
@@ -44,6 +46,13 @@ export default new Router({
       meta: {auth: true},
       components: {
         default: EditPlaylistView
+      }
+    }, {
+      path: '/localMusics',
+      name: 'LocalMusicsView',
+      meta: {auth: true},
+      components: {
+        default: LocalMusicsView
       }
     }, {
       path: '*',

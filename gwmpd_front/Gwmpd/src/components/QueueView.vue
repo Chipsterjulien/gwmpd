@@ -1,6 +1,6 @@
 <template>
   <div class="" v-if="getConnectionStatus === true">
-    <b-container>
+    <b-container class="backgroundAndRoundedBox" v-if="status.state !== 'stop'">
       <div class="text-center" v-if="currentSong.Title === '' && currentSong.Album === '' && currentSong.Artist === ''">
         <h5>&nbsp;</h5>
         <h2 class="truncateLongText">{{ currentSong.file }}</h2>
@@ -24,7 +24,8 @@
       <input type="range" class="musicSlider" b-tooltip.hover :title="getMusicElapsed" min="0" :max="status.duration" v-model.number="musicValue"><br>
     </div>
 
-    <div>
+    <!-- Array of playlist -->
+    <div v-if="currentPlaylist.length > 0">
       <b-table stacked="md" striped hover :items="currentPlaylist" :fields="fields">
         <template slot="File" slot-scope="data">
           <span class="toLongFilenameSong">{{ data.item.File }}</span>
@@ -149,6 +150,10 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+  .backgroundAndRoundedBox {
+    background-color: white;
+    border-radius: 25px;
+  }
   .buttonAlignRight {
     @media screen and (max-width: 768px) {
       float: right;

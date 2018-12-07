@@ -10,6 +10,39 @@ import (
 	logging "github.com/op/go-logging"
 )
 
+func (e *com) addSongToCurrentPlaylist(c *gin.Context) {
+	log := logging.MustGetLogger("log")
+
+	var songForm addSongToCurrentPlaylistForm
+
+	if err := c.ShouldBind(&songForm); err == nil {
+		e.mutex.Lock()
+		e.sendCmdToMPDChan <- []byte(fmt.Sprintf("add \"%s\"", songForm.SongFilename))
+		for {
+			line := <-e.cmdToConsumeChan
+			if bytes.Equal(line, []byte("OK")) {
+				e.mutex.Unlock()
+				break
+			} else if bytes.Contains(line, []byte("ACK")) {
+				e.mutex.Unlock()
+				c.JSON(200, gin.H{"addSongToCurrentPlaylist": "failed"})
+
+				return
+			}
+
+			first, _ := splitLine(&line)
+			switch first {
+			default:
+				log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
+			}
+		}
+
+		c.JSON(200, gin.H{"addSongToCurrentPlaylist": "ok", "songFilename": songForm.SongFilename})
+	} else {
+		log.Warningf("Unable to add song in playlist: %s\n", err)
+	}
+}
+
 func (e *com) addSongToPlaylist(c *gin.Context) {
 	log := logging.MustGetLogger("log")
 
