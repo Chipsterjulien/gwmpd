@@ -21,11 +21,13 @@ func (e *com) addSongToCurrentPlaylist(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"addSongToCurrentPlaylist": "ok", "songFilename": songForm.SongFilename})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"addSongToCurrentPlaylist": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"addSongToCurrentPlaylist": "failed"})
 
 				return
 			}
@@ -36,8 +38,6 @@ func (e *com) addSongToCurrentPlaylist(c *gin.Context) {
 				log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"addSongToCurrentPlaylist": "ok", "songFilename": songForm.SongFilename})
 	} else {
 		log.Warningf("Unable to add song in playlist: %s\n", err)
 	}
@@ -54,11 +54,13 @@ func (e *com) addSongToPlaylist(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"addSongToPlaylist": "ok", "playlistName": songForm.PlaylistName, "songFilename": songForm.SongFilename})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"addSongToPlaylist": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"addSongToPlaylist": "failed"})
 
 				return
 			}
@@ -69,8 +71,6 @@ func (e *com) addSongToPlaylist(c *gin.Context) {
 				log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"addSongToPlaylist": "ok", "playlistName": songForm.PlaylistName, "songFilename": songForm.SongFilename})
 	} else {
 		log.Warningf("Unable to add song in playlist: %s\n", err)
 	}
@@ -87,11 +87,13 @@ func (e *com) clearPlaylist(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"clearPlaylist": "ok"})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"clearPlaylist": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"clearPlaylist": "failed"})
 
 				return
 			}
@@ -102,8 +104,6 @@ func (e *com) clearPlaylist(c *gin.Context) {
 				log.Infof("In clearPlaylist, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"clearPlaylist": "ok"})
 	} else {
 		log.Warningf("Unable to clear playlist \"%v\": %s\n", playlist.PlaylistName, err)
 	}
@@ -119,11 +119,13 @@ func (e *com) getAllPlaylists(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, playlists)
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"allPlaylists": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"allPlaylists": "failed"})
 
 			return
 		}
@@ -137,8 +139,6 @@ func (e *com) getAllPlaylists(c *gin.Context) {
 			log.Infof("In getAllFiles, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, playlists)
 }
 
 func (e *com) getClearCurrentPlaylist(c *gin.Context) {
@@ -150,11 +150,13 @@ func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"clearCurrentPlaylist": "ok"})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"clearCurrentPlaylist": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"clearCurrentPlaylist": "failed"})
 
 			return
 		}
@@ -165,8 +167,6 @@ func (e *com) getClearCurrentPlaylist(c *gin.Context) {
 			log.Infof("In getClearCurrentPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"clearCurrentPlaylist": "ok"})
 }
 
 func (e *com) getCurrentPlaylist(c *gin.Context) {
@@ -180,11 +180,13 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, e.info.currentPlaylist)
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"currentPlaylist": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"currentPlaylist": "failed"})
 
 			return
 		}
@@ -217,6 +219,7 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 			}
 			mySong.ID = i
 			e.info.currentPlaylist = append(e.info.currentPlaylist, mySong)
+			log.Debug("Création d'une nouvelle musique")
 			mySong = mpdCurrentSong{}
 		case "Last-Modified":
 			mySong.LastModified = end
@@ -241,8 +244,6 @@ func (e *com) getCurrentPlaylist(c *gin.Context) {
 			log.Infof("In getCurrentPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, e.info.currentPlaylist)
 }
 
 func (e *com) getCurrentSong(c *gin.Context) {
@@ -256,11 +257,28 @@ func (e *com) getCurrentSong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+
+			e.info.currentSong = &mySong
+
+			c.JSON(200, gin.H{
+				"Album":         e.info.currentSong.Album,
+				"Artist":        e.info.currentSong.Artist,
+				"Date":          e.info.currentSong.Date,
+				"duration":      e.info.currentSong.Duration,
+				"file":          e.info.currentSong.File,
+				"Id":            e.info.currentSong.ID,
+				"Last-Modified": e.info.currentSong.LastModified,
+				"Name":          e.info.currentSong.Name,
+				"Pos":           e.info.currentSong.Pos,
+				"Title":         e.info.currentSong.Title,
+				"Time":          e.info.currentSong.Time,
+			})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"currentSong": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"currentSong": "failed"})
 
 			return
 		}
@@ -316,22 +334,6 @@ func (e *com) getCurrentSong(c *gin.Context) {
 			log.Infof("In getCurrentSong, unknown: \"%s\"\n", first)
 		}
 	}
-
-	e.info.currentSong = &mySong
-
-	c.JSON(200, gin.H{
-		"Album":         e.info.currentSong.Album,
-		"Artist":        e.info.currentSong.Artist,
-		"Date":          e.info.currentSong.Date,
-		"duration":      e.info.currentSong.Duration,
-		"file":          e.info.currentSong.File,
-		"Id":            e.info.currentSong.ID,
-		"Last-Modified": e.info.currentSong.LastModified,
-		"Name":          e.info.currentSong.Name,
-		"Pos":           e.info.currentSong.Pos,
-		"Title":         e.info.currentSong.Title,
-		"Time":          e.info.currentSong.Time,
-	})
 }
 
 func (e *com) getFilesList(c *gin.Context) {
@@ -349,10 +351,24 @@ func (e *com) getFilesList(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+			newSongsList := []mpdCurrentSong{}
+			for pos, song := range songs {
+				if err := getSongInfos(e, &songs[pos], &location, &song.File); err == nil {
+					newSongsList = append(newSongsList, songs[pos])
+				}
+			}
+
+			infos := make(map[string]interface{})
+			infos["directories"] = directories
+			infos["songs"] = newSongsList
+
+			c.JSON(200, infos)
+
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"filesList": "failed"})
+			break
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"filesList": "failed", "error": line})
+			e.mutex.Unlock()
 
 			return
 		}
@@ -371,21 +387,6 @@ func (e *com) getFilesList(c *gin.Context) {
 			log.Infof("In getFilesList, unknown: \"%s\"\n", first)
 		}
 	}
-
-	newSongsList := []mpdCurrentSong{}
-	for pos, song := range songs {
-		if err := getSongInfos(e, &songs[pos], &location, &song.File); err == nil {
-			newSongsList = append(newSongsList, songs[pos])
-		}
-	}
-
-	e.mutex.Unlock()
-
-	infos := make(map[string]interface{})
-	infos["directories"] = directories
-	infos["songs"] = newSongsList
-
-	c.JSON(200, infos)
 }
 
 func (e *com) getLoadPlaylist(c *gin.Context) {
@@ -398,11 +399,13 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"loadPlaylist": name})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"loadPlaylist": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"loadPlaylist": "failed"})
 
 			return
 		}
@@ -413,8 +416,6 @@ func (e *com) getLoadPlaylist(c *gin.Context) {
 			log.Infof("In getloadPlaylist, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"loadPlaylist": name})
 }
 
 func (e *com) getNextSong(c *gin.Context) {
@@ -426,12 +427,14 @@ func (e *com) getNextSong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			c.JSON(200, gin.H{"nextSong": "ok"})
+			e.mutex.Unlock()
+
 			return
 		} else if bytes.Contains(line, []byte("ACK [55@0]")) {
-			e.mutex.Unlock()
 			c.JSON(200, gin.H{"nextSong": "failed"})
+			e.mutex.Unlock()
+
 			return
 		}
 
@@ -452,11 +455,13 @@ func (e *com) getPauseSong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"pauseSong": "ok"})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"pauseSong": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"pauseSong": "failed"})
 
 			return
 		}
@@ -467,8 +472,6 @@ func (e *com) getPauseSong(c *gin.Context) {
 			log.Infof("In getPauseSong, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"pauseSong": "ok"})
 }
 
 func (e *com) getPlaylistSongsList(c *gin.Context) {
@@ -489,11 +492,13 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, playlist)
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"playListSongsList": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"playlistSongsList": "failed"})
 
 			return
 		}
@@ -546,8 +551,6 @@ func (e *com) getPlaylistSongsList(c *gin.Context) {
 			log.Infof("In getPlaylistSongsList, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, playlist)
 }
 
 func (e *com) getPlaySong(c *gin.Context) {
@@ -564,11 +567,13 @@ func (e *com) getPlaySong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"playSong": "ok"})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"playSong": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"playSong": "failed"})
 
 			return
 		}
@@ -579,8 +584,6 @@ func (e *com) getPlaySong(c *gin.Context) {
 			log.Infof("In getPlaySong, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"playSong": "ok"})
 }
 
 func (e *com) getPreviousSong(c *gin.Context) {
@@ -592,12 +595,14 @@ func (e *com) getPreviousSong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
-			e.mutex.Unlock()
 			c.JSON(200, gin.H{"previousSong": "ok"})
-			return
-		} else if bytes.Contains(line, []byte("ACK [55@0]")) {
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"previousSong": "failed"})
+
+			return
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"previousSong": "failed", "error": line})
+			e.mutex.Unlock()
+
 			return
 		}
 
@@ -618,11 +623,13 @@ func (e *com) getStopSong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"stopSong": "ok"})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"stopSong": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"stopSong": "failed"})
 
 			return
 		}
@@ -633,8 +640,6 @@ func (e *com) getStopSong(c *gin.Context) {
 			log.Infof("In getStopSong, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"stopSong": "ok"})
 }
 
 func (e *com) getStatusMPD(c *gin.Context) {
@@ -648,11 +653,35 @@ func (e *com) getStatusMPD(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			myStatus.VolumeSav = e.info.status.VolumeSav
+			e.info.status = &myStatus
+
+			c.JSON(200, gin.H{
+				"audio":          e.info.status.Audio,
+				"bitrate":        e.info.status.Bitrate,
+				"consume":        e.info.status.Consume,
+				"duration":       e.info.status.Duration,
+				"elapsed":        e.info.status.Elapsed,
+				"error":          e.info.status.Error,
+				"mixrampdb":      e.info.status.MixrampDB,
+				"playlist":       e.info.status.Playlist,
+				"playlistlength": e.info.status.PlaylistLength,
+				"random":         e.info.status.Random,
+				"repeat":         e.info.status.Repeat,
+				"single":         e.info.status.Single,
+				"song":           e.info.status.Song,
+				"songid":         e.info.status.SongID,
+				"nextsong":       e.info.status.NextSong,
+				"nextsongid":     e.info.status.NextSongID,
+				"state":          e.info.status.State,
+				"volume":         e.info.status.Volume,
+			})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"statusMPD": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"statusMPD": "failed"})
 
 			return
 		}
@@ -768,30 +797,6 @@ func (e *com) getStatusMPD(c *gin.Context) {
 			log.Infof("In getStatusMPD, unknown: \"%s\"\n", first)
 		}
 	}
-
-	myStatus.VolumeSav = e.info.status.VolumeSav
-	e.info.status = &myStatus
-
-	c.JSON(200, gin.H{
-		"audio":          e.info.status.Audio,
-		"bitrate":        e.info.status.Bitrate,
-		"consume":        e.info.status.Consume,
-		"duration":       e.info.status.Duration,
-		"elapsed":        e.info.status.Elapsed,
-		"error":          e.info.status.Error,
-		"mixrampdb":      e.info.status.MixrampDB,
-		"playlist":       e.info.status.Playlist,
-		"playlistlength": e.info.status.PlaylistLength,
-		"random":         e.info.status.Random,
-		"repeat":         e.info.status.Repeat,
-		"single":         e.info.status.Single,
-		"song":           e.info.status.Song,
-		"songid":         e.info.status.SongID,
-		"nextsong":       e.info.status.NextSong,
-		"nextsongid":     e.info.status.NextSongID,
-		"state":          e.info.status.State,
-		"volume":         e.info.status.Volume,
-	})
 }
 
 func (e *com) moveSong(c *gin.Context) {
@@ -809,11 +814,13 @@ func (e *com) moveSong(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"moveSong": "ok"})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"moveSong": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"moveSong": "failed"})
 
 				return
 			}
@@ -824,8 +831,6 @@ func (e *com) moveSong(c *gin.Context) {
 				log.Infof("In moveSong, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"moveSong": "ok"})
 	} else {
 		log.Warningf("Unable to move song \"%v\" in playlist: %s\n", song.PlaylistName, err)
 	}
@@ -842,11 +847,13 @@ func (e *com) removePlaylist(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"removePlaylist": "ok"})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"removePlaylist": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"removePlaylist": "failed"})
 
 				return
 			}
@@ -857,8 +864,6 @@ func (e *com) removePlaylist(c *gin.Context) {
 				log.Infof("In removePlaylist, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"removePlaylist": "ok"})
 	} else {
 		log.Warningf("Unable to remove playlist \"%v\": %s\n", playlistName.PlaylistName, err)
 	}
@@ -875,11 +880,13 @@ func (e *com) removeSong(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"removeSong": "ok"})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"removeSong": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"removeSong": "failed"})
 
 				return
 			}
@@ -890,8 +897,6 @@ func (e *com) removeSong(c *gin.Context) {
 				log.Infof("In removeSong, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"removeSong": "ok"})
 	} else {
 		log.Warningf("Unable to remove song in \"%v\" at \"%d\": %s\n", song.PlaylistName, song.Pos, err)
 	}
@@ -908,11 +913,13 @@ func (e *com) renamePlaylist(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"renamePlaylist": "ok", "newName": name.NewName})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"renamePlaylist": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"renamePlaylist": "failed"})
 
 				return
 			}
@@ -923,8 +930,6 @@ func (e *com) renamePlaylist(c *gin.Context) {
 				log.Infof("In renamePlaylist, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"renamePlaylist": "ok", "newName": name.NewName})
 	} else {
 		log.Warningf("Unable to rename playlist \"%ss\" to \"%s\": %s\n", name.OldName, name.NewName, err)
 	}
@@ -941,11 +946,13 @@ func (e *com) savePlaylist(c *gin.Context) {
 		for {
 			line := <-e.cmdToConsumeChan
 			if bytes.Equal(line, []byte("OK")) {
+				c.JSON(200, gin.H{"savePlaylist": "ok"})
 				e.mutex.Unlock()
+
 				break
-			} else if bytes.Contains(line, []byte("ACK")) {
+			} else if ackRegex.Match(line) {
+				c.JSON(200, gin.H{"savePlaylist": "failed", "error": line})
 				e.mutex.Unlock()
-				c.JSON(200, gin.H{"savePlaylist": "failed"})
 
 				return
 			}
@@ -956,8 +963,6 @@ func (e *com) savePlaylist(c *gin.Context) {
 				log.Infof("In savePlaylist, unknown: \"%s\"\n", first)
 			}
 		}
-
-		c.JSON(200, gin.H{"savePlaylist": "ok"})
 	} else {
 		log.Warningf("Unable to save playlist \"%v\": %s\n", playlistName.PlaylistName, err)
 	}
@@ -985,11 +990,13 @@ func (e *com) setPositionTimeInCurrentSong(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"setPosition": "ok", "position": e.info.status.Elapsed})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"setPosition": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"setPosition": "failed"})
 
 			return
 		}
@@ -1000,8 +1007,6 @@ func (e *com) setPositionTimeInCurrentSong(c *gin.Context) {
 			log.Infof("In setPositionTimeInCurrentSong, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"setPosition": "ok", "position": e.info.status.Elapsed})
 }
 
 func (e *com) setVolume(c *gin.Context) {
@@ -1021,11 +1026,13 @@ func (e *com) setVolume(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.status.Volume})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"setVolume": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"setVolume": "failed"})
 
 			return
 		}
@@ -1036,8 +1043,6 @@ func (e *com) setVolume(c *gin.Context) {
 			log.Infof("In setVolume, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"setVolume": "ok", "volume": e.info.status.Volume})
 }
 
 func (e *com) shuffle(c *gin.Context) {
@@ -1049,11 +1054,13 @@ func (e *com) shuffle(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"shuffle": "ok"})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"shuffle": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"shuffle": "failed"})
 
 			return
 		}
@@ -1064,8 +1071,6 @@ func (e *com) shuffle(c *gin.Context) {
 			log.Infof("In shuffle, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"shuffle": "ok"})
 }
 
 func (e *com) toggleConsume(c *gin.Context) {
@@ -1083,11 +1088,13 @@ func (e *com) toggleConsume(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"toggleConsume": "ok", "consume": e.info.status.Consume})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"toggleConsume": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"toggleConsume": "failed"})
 
 			return
 		}
@@ -1098,8 +1105,6 @@ func (e *com) toggleConsume(c *gin.Context) {
 			log.Infof("In toggleConsume, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"toggleConsume": "ok", "consume": e.info.status.Consume})
 }
 
 func (e *com) toggleRandom(c *gin.Context) {
@@ -1117,11 +1122,13 @@ func (e *com) toggleRandom(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"toggleRandom": "ok", "random": e.info.status.Random})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"toggleRandom": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"toggleRandom": "failed"})
 
 			return
 		}
@@ -1132,8 +1139,6 @@ func (e *com) toggleRandom(c *gin.Context) {
 			log.Infof("In toggleRandom, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"toggleRandom": "ok", "random": e.info.status.Random})
 }
 
 func (e *com) toggleRepeat(c *gin.Context) {
@@ -1151,11 +1156,13 @@ func (e *com) toggleRepeat(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"toggleRepeat": "ok", "repeat": e.info.status.Repeat})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"toggleRepeat": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"toggleRepeat": "failed"})
 
 			return
 		}
@@ -1166,8 +1173,6 @@ func (e *com) toggleRepeat(c *gin.Context) {
 			log.Infof("In toggleRepeat, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"toggleRepeat": "ok", "repeat": e.info.status.Repeat})
 }
 
 // func (e *com) toggleSingle(c *gin.Context) {
@@ -1220,11 +1225,13 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.Volume})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"toggleMuteVolume": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"toggleMuteVolume": "failed"})
 
 			return
 		}
@@ -1235,8 +1242,6 @@ func (e *com) toggleMuteVolume(c *gin.Context) {
 			log.Infof("In toggleMuteVolume, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"toggleMute": "ok", "volume": e.info.status.Volume})
 }
 
 func (e *com) updateDB(c *gin.Context) {
@@ -1248,11 +1253,13 @@ func (e *com) updateDB(c *gin.Context) {
 	for {
 		line := <-e.cmdToConsumeChan
 		if bytes.Equal(line, []byte("OK")) {
+			c.JSON(200, gin.H{"updateDB": "ok"})
 			e.mutex.Unlock()
+
 			break
-		} else if bytes.Contains(line, []byte("ACK")) {
+		} else if ackRegex.Match(line) {
+			c.JSON(200, gin.H{"updateDB": "failed", "error": line})
 			e.mutex.Unlock()
-			c.JSON(200, gin.H{"updateDB": "failed"})
 
 			return
 		}
@@ -1264,6 +1271,4 @@ func (e *com) updateDB(c *gin.Context) {
 			log.Infof("In updateDB, unknown: \"%s\"\n", first)
 		}
 	}
-
-	c.JSON(200, gin.H{"updateDB": "ok"})
 }

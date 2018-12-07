@@ -148,11 +148,6 @@ export default {
         })
     },
     replaceCurrentPlaylist (filename) {
-      // buggy function !
-
-      // Je ne suis pas sur que ça soit ici le problème.
-      // Normalement, le serveur ne devrait pas merder … et il merde
-
       // Stop music
       this.axios.get('v1/stopSong')
         .then(response => {
@@ -169,14 +164,13 @@ export default {
               this.axios.post('v1/addSongToCurrentPlaylist', {songFilename: filename})
                 .then(response => {
                   this.getPlaylist()
-
                   // Play song if not
-                  // if (this.getStatus.state !== 'play') {
-                  //   this.axios.get('v1/playSong')
-                  //     .then(response => {
-                  //       this.setState('play')
-                  //     })
-                  // }
+                  if (this.getStatus.state !== 'play') {
+                    this.axios.get('v1/playSong')
+                      .then(response => {
+                        this.setState('play')
+                      })
+                  }
                 })
             })
         })

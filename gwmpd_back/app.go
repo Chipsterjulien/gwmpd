@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
 	"strconv"
 	"sync"
 	"time"
@@ -16,6 +17,9 @@ import (
 )
 
 var identityKey = "id"
+var ackRegex = regexp.MustCompile("^ACK \\[.+?@.+?\\] \\{.+?\\} .+?$")
+
+// ACK [50@1] {play} song doesn't exist: "10240"
 
 func initGin(com *com) {
 	log := logging.MustGetLogger("log")
@@ -160,13 +164,13 @@ func startApp() {
 }
 
 func main() {
-	// confPath := "/etc/gwmpd"
-	// confFilename := "gwmpd"
-	// logFilename := "/var/log/gwmpd/error.log"
+	confPath := "/etc/gwmpd"
+	confFilename := "gwmpd"
+	logFilename := "/var/log/gwmpd/error.log"
 
-	confPath := "cfg/"
-	confFilename := "gwmpd_sample"
-	logFilename := "error.log"
+	// confPath := "cfg/"
+	// confFilename := "gwmpd_sample"
+	// logFilename := "error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()
