@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 import draggable from 'vuedraggable'
 export default {
   components: {
@@ -115,6 +115,9 @@ export default {
     })
   },
   methods: {
+    ...mapActions([
+      'setCurrentView'
+    ]),
     onMove ({ relatedContext, draggedContext }) {
       this.songOnMove = draggedContext
     },
@@ -262,6 +265,8 @@ export default {
     }
   },
   mounted () {
+    this.setCurrentView('EditPlaylistView')
+
     this.playlistName = this.$route.params.playlistName
     this.newPlaylistName = this.playlistName
     this.getPlaylist()

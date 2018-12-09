@@ -22,13 +22,21 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import { mapGetters, mapActions } from 'vuex'
 export default {
   name: 'AboutView',
   computed: {
     ...mapGetters({
       getConnectionStatus: 'getConnectionStatus'
     })
+  },
+  methods: {
+    ...mapActions([
+      'setCurrentView'
+    ])
+  },
+  mounted () {
+    this.setCurrentView('AboutView')
   }
 }
 </script>

@@ -67,6 +67,7 @@ export default {
   },
   methods: {
     ...mapActions([
+      'setCurrentView',
       'setPlaylist',
       'setState'
     ]),
@@ -184,6 +185,7 @@ export default {
     }
   },
   mounted () {
+    this.setCurrentView('LocalMusicsView')
     this.getPlaylist()
     this.getFilesList()
   }

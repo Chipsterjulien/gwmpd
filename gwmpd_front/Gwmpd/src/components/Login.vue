@@ -31,6 +31,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
 export default {
   name: 'Login',
   data () {
@@ -48,6 +49,9 @@ export default {
     }
   },
   methods: {
+    ...mapActions([
+      'setCurrentView'
+    ]),
     login () {
       this.axios.defaults.baseURL = this.url
       var redirect = this.$auth.redirect()
@@ -84,6 +88,7 @@ export default {
     }
   },
   mounted () {
+    this.setCurrentView('LoginView')
     if (localStorage.url !== 'undefined') {
       this.url = localStorage.url
       this.axios.defaults.baseURL = this.url

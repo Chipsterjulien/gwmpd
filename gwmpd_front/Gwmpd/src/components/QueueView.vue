@@ -79,6 +79,7 @@ export default {
   },
   methods: {
     ...mapActions([
+      'setCurrentView',
       'setPlaylist',
       'setPosition',
       'setState',
@@ -141,6 +142,7 @@ export default {
     }
   },
   mounted () {
+    this.setCurrentView('QueueView')
     this.axios.get('v1/currentPlaylist')
       .then(response => {
         this.setPlaylist(response.data)

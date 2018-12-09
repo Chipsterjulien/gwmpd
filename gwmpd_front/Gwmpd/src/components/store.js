@@ -28,32 +28,6 @@ function getMusicName (filename) {
   return filenameSplitted[filenameSplitted.length - 1]
 }
 
-const currentPlaylist = {
-  state: {
-    playlist: {}
-  },
-  getters: {
-    getCurrentPlaylist: state => state.playlist
-  },
-  mutations: {
-    SET_PLAYLIST: (state, newPlaylist) => {
-      if (newPlaylist !== {}) {
-        var i
-        for (i = 0; i < newPlaylist.length; i++) {
-          newPlaylist[i].Duration = convertSecondsToString(newPlaylist[i].Duration)
-          newPlaylist[i].File = getMusicName(newPlaylist[i].File)
-        }
-      }
-      state.playlist = newPlaylist
-    }
-  },
-  actions: {
-    setPlaylist: ({state, commit}, newPlaylist) => {
-      commit('SET_PLAYLIST', newPlaylist)
-    }
-  }
-}
-
 const allPlaylists = {
   state: {
     allPlaylists: []
@@ -74,6 +48,51 @@ const allPlaylists = {
   actions: {
     setAllPlaylists: ({state, commit}, newPlaylists) => {
       commit('SET_ALL_PLAYLISTS', newPlaylists)
+    }
+  }
+}
+
+const connectionStatus = {
+  state: {
+    status: {}
+  },
+  getters: {
+    getConnectionStatus: state => state.status
+  },
+  mutations: {
+    SET_CONNECTION_STATUS: (state, newStatus) => {
+      state.status = newStatus
+    }
+  },
+  actions: {
+    setConnectionStatus: ({ state, commit }, newStatus) => {
+      commit('SET_CONNECTION_STATUS', newStatus)
+    }
+  }
+}
+
+const currentPlaylist = {
+  state: {
+    playlist: {}
+  },
+  getters: {
+    getCurrentPlaylist: state => state.playlist
+  },
+  mutations: {
+    SET_PLAYLIST: (state, newPlaylist) => {
+      if (newPlaylist !== {}) {
+        var i
+        for (i = 0; i < newPlaylist.length; i++) {
+          newPlaylist[i].Duration = convertSecondsToString(newPlaylist[i].Duration)
+          newPlaylist[i].File = getMusicName(newPlaylist[i].File)
+        }
+      }
+      state.playlist = newPlaylist
+    }
+  },
+  actions: {
+    setPlaylist: ({ state, commit }, newPlaylist) => {
+      commit('SET_PLAYLIST', newPlaylist)
     }
   }
 }
@@ -103,21 +122,23 @@ const currentSong = {
   }
 }
 
-const connectionStatus = {
+const currentView = {
   state: {
-    status: {}
+    view: 'LoginView'
   },
   getters: {
-    getConnectionStatus: state => state.status
+    getCurrentView: state => state.view
   },
   mutations: {
-    SET_CONNECTION_STATUS: (state, newStatus) => {
-      state.status = newStatus
+    SET_CURRENT_VIEW: (state, newVue) => {
+      console.log('Ancienne vue: ', state.view)
+      console.log('Nouvelle vue: ', newVue)
+      state.view = newVue
     }
   },
   actions: {
-    setConnectionStatus: ({state, commit}, newStatus) => {
-      commit('SET_CONNECTION_STATUS', newStatus)
+    setCurrentView: ({state, commit}, newVue) => {
+      commit('SET_CURRENT_VIEW', newVue)
     }
   }
 }
@@ -186,10 +207,10 @@ const status = {
 export default new Vuex.Store({
   modules: {
     allPlaylists: allPlaylists,
+    connectionStatus: connectionStatus,
     currentPlaylist: currentPlaylist,
     currentSong: currentSong,
-    // stat: stat,
-    connectionStatus: connectionStatus,
+    currentView: currentView,
     status: status
   },
   strict: true

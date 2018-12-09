@@ -19,8 +19,6 @@ import (
 var identityKey = "id"
 var ackRegex = regexp.MustCompile("^ACK \\[.+?@.+?\\] \\{.+?\\} .+?$")
 
-// ACK [50@1] {play} song doesn't exist: "10240"
-
 func initGin(com *com) {
 	log := logging.MustGetLogger("log")
 

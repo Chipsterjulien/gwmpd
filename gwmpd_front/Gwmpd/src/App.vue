@@ -1,5 +1,6 @@
 <template lang="html">
   <div id="app">
+    <!-- Vue courante: {{ getCurrentView }} -->
     <div class="myNavBar" v-if="getConnectionStatus === true">
       <b-navbar toggleable="md" class="navBar" type="dark">
         <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
@@ -69,6 +70,7 @@ export default {
     ...mapGetters({
       getConnectionStatus: 'getConnectionStatus',
       getCurrentSongInfos: 'getCurrentSongInfos',
+      getCurrentView: 'getCurrentView',
       getStatus: 'getStatusInfos'
     }),
     volumeValue: {
@@ -162,7 +164,9 @@ export default {
     this.$refreshMpdDataInterval = setInterval(() => {
       this.axios.get('v1/statusMPD').then((response) => {
         this.setAllStatus(response.data)
-        this.setConnectionStatus(true)
+        if (this.getCurrentView !== 'LoginView') {
+          this.setConnectionStatus(true)
+        }
         if (response.data.state === 'play') {
           this.axios.get('v1/currentSong').then((response) => {
             if (this.getCurrentSongInfos.file !== response.data.file) {

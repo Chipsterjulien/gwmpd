@@ -42,6 +42,7 @@ export default {
   },
   methods: {
     ...mapActions([
+      'setCurrentView',
       'setState',
       'setAllPlaylists'
     ]),
@@ -90,6 +91,7 @@ export default {
     }
   },
   mounted () {
+    this.setCurrentView('PlaylistView')
     this.loadAllPlaylists()
   }
 }
