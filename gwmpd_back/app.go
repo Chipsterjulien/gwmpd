@@ -166,10 +166,6 @@ func main() {
 	confFilename := "gwmpd"
 	logFilename := "/var/log/gwmpd/error.log"
 
-	// confPath := "cfg/"
-	// confFilename := "gwmpd_sample"
-	// logFilename := "error.log"
-
 	fd := initLogging(&logFilename)
 	defer fd.Close()
 

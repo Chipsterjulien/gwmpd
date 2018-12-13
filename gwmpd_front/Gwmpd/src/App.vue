@@ -1,6 +1,5 @@
 <template lang="html">
   <div id="app">
-    <!-- Vue courante: {{ getCurrentView }} -->
     <div class="myNavBar" v-if="getConnectionStatus === true">
       <b-navbar toggleable="md" class="navBar" type="dark">
         <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>

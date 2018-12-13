@@ -35,8 +35,8 @@
         </template>
         <template slot="addSong" slot-scope="data">
           <div class="alignButtonInTable">
-            <b-button v-b-tooltip.hover.top title="Add music to the current playlist" @click="addSongToCurrentPlaylist(data.item.Name)" class="icon-queue_music"></b-button>
-            <b-button v-b-tooltip.hover.top title="Replace the current playlist by this music" @click="replaceCurrentPlaylist(data.item.Name)" class="icon-add"></b-button>
+            <b-button v-b-tooltip.hover.top title="Add music to the current playlist" @click="addSongToCurrentPlaylist(data.item.File)" class="icon-queue_music"></b-button>
+            <b-button v-b-tooltip.hover.top title="Replace the current playlist by this music" @click="replaceCurrentPlaylist(data.item.File)" class="icon-add"></b-button>
           </div>
         </template>
       </b-table>

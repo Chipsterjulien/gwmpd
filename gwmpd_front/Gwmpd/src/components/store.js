@@ -131,8 +131,6 @@ const currentView = {
   },
   mutations: {
     SET_CURRENT_VIEW: (state, newVue) => {
-      console.log('Ancienne vue: ', state.view)
-      console.log('Nouvelle vue: ', newVue)
       state.view = newVue
     }
   },
