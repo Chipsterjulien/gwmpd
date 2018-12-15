@@ -162,9 +162,9 @@ func startApp() {
 }
 
 func main() {
-	confPath := "cfg/"
-	confFilename := "gwmpd_sample"
-	logFilename := "error.log"
+	confPath := "/etc/gwmpd"
+	confFilename := "gwmpd"
+	logFilename := "/var/log/gwmpd/error.log"
 
 	fd := initLogging(&logFilename)
 	defer fd.Close()

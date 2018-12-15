@@ -37,7 +37,7 @@
           </b-progress>
         </b-alert>
 
-        <b-button type="submit" size="sm" variant="primary" class="submitButton">Sign in</b-button>
+        <b-button type="submit" size="sm" variant="primary" class="submitButton" :disabled="authorizedSubmitButton === true">Sign in</b-button>
       </b-form>
     </b-container>
   </div>
@@ -62,6 +62,18 @@ export default {
       url: '',
       visibilityBool: false,
       visibilityIcon: 'icon-visibility'
+    }
+  },
+  computed: {
+    authorizedSubmitButton: {
+      get: function () {
+        if (this.url !== '' && this.user !== '' && this.password !== '') {
+          return false
+        } else {
+          // return true if data is missing
+          return true
+        }
+      }
     }
   },
   methods: {
