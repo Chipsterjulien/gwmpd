@@ -24,6 +24,19 @@
           </b-input-group>
         </b-form-group>
 
+        <b-alert :show="dismissCountDown"
+          dismissible
+          variant="danger"
+          @dismissed="dismissCountDown=0"
+          @dismiss-count-down="countDownChanged">
+            <p>Unable to connect to "<strong>{{ url }}</strong>"</p>
+          <b-progress variant="danger"
+            :max="dismissSecs"
+            :value="dismissCountDown"
+            height="4px">
+          </b-progress>
+        </b-alert>
+
         <b-button type="submit" size="sm" variant="primary" class="submitButton">Sign in</b-button>
       </b-form>
     </b-container>
@@ -37,12 +50,15 @@ export default {
   data () {
     return {
       data: {
-        rememberMe: false,
-        fetchUser: false
+        fetchUser: false,
+        rememberMe: false
       },
+      dismissSecs: 10,
+      dismissCountDown: 0,
       user: '',
       password: '',
       seePassword: 'password',
+      showDismissibleAlert: false,
       url: '',
       visibilityBool: false,
       visibilityIcon: 'icon-visibility'
@@ -52,6 +68,9 @@ export default {
     ...mapActions([
       'setCurrentView'
     ]),
+    countDownChanged (dismissCountDown) {
+      this.dismissCountDown = dismissCountDown
+    },
     login () {
       this.axios.defaults.baseURL = this.url
       var redirect = this.$auth.redirect()
@@ -70,10 +89,15 @@ export default {
           sessionStorage.token = response.data.token
           localStorage.url = this.url
         },
-        error () {
+        error (err) {
+          this.showAlert()
+          console.log(err)
           delete sessionStorage.token
         }
       })
+    },
+    showAlert () {
+      this.dismissCountDown = this.dismissSecs
     },
     toggleVisibility () {
       if (this.visibilityBool === true) {

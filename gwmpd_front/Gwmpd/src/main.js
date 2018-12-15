@@ -5,6 +5,7 @@ import Vue from 'vue'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
+import bProgress from 'bootstrap-vue/es/components/progress/progress'
 import bButton from 'bootstrap-vue/es/components/button/button'
 import bButtonGroup from 'bootstrap-vue/es/components/button-group/button-group'
 import bButtonToolbar from 'bootstrap-vue/es/components/button-toolbar/button-toolbar'
@@ -44,6 +45,7 @@ import store from './components/store'
 
 Vue.router = router
 
+Vue.component('b-progress', bProgress)
 Vue.component('b-button', bButton)
 Vue.component('b-button-group', bButtonGroup)
 Vue.component('b-button-toolbar', bButtonToolbar)
