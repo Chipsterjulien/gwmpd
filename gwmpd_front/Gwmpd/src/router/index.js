@@ -6,6 +6,7 @@ import SideBarView from '@/components/SideBarView'
 import PlaylistView from '@/components/PlaylistView'
 import EditPlaylistView from '@/components/EditPlaylistView'
 import LocalMusicsView from '@/components/LocalMusicsView'
+import ConfigView from '@/components/ConfigView'
 import AboutView from '@/components/AboutView'
 
 Vue.use(Router)
@@ -53,6 +54,13 @@ export default new Router({
       meta: {auth: true},
       components: {
         default: LocalMusicsView
+      }
+    }, {
+      path: '/config',
+      name: 'ConfigView',
+      meta: {auth: true},
+      components: {
+        default: ConfigView
       }
     }, {
       path: '*',

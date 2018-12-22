@@ -5,7 +5,7 @@ There are 2 parts:
 * the backend which written in Go. It communicates with mpd and web GUI
 * the frontend which written in JS (vuejs)
 
-__Rest API is now secure with JWT token but you SHOULD use it over https__  
+<!-- __Rest API is now secure with JWT token but you SHOULD use it over https__   -->
 
 ## Dependencies
 These programs are only useful for build backend and frontend:
@@ -13,18 +13,34 @@ These programs are only useful for build backend and frontend:
 * yarn (you can easily replace yarn by npm)
 * git
 
-## Install to your server
-### Build
+## Use of precompiled sources
+### Backend
+
+Go inside [https://github.com/Chipsterjulien/gwmpd/tree/master/Build/Backend](https://github.com/Chipsterjulien/gwmpd/tree/master/Build/Backend). You will find
+3 exe:
+* A generic for x86_64 (64 bits linux)
+* A generic for arm-v6
+* A generic for arm-v7
+
+### Frontend
+
+Go inside [https://github.com/Chipsterjulien/gwmpd/tree/master/Build/Frontend](https://github.com/Chipsterjulien/gwmpd/tree/master/Build/Frontend). You will find
+the latest build of frontend. Download and move files to you root web site. The gwmpd's GUI is intended to work at the root but you can easily use a subdomain
+
+
+## Build sources yourself
+### Build backend and frontend
 ```sh
 git clone https://github.com/Chipsterjulien/gwmpd.git
 cd gwmpd/
-chmod +x auto_build.sh
-./auto_build.sh
+make build
 ```
 
 Build JS is somethimes very long so you can take a coffee ;-)
 
-### Backend
+You will find backend and frontend in **Build** folder
+
+### Install backend
 After building, move gwmpdBack to your /usr/bin as follow:
 ```sh
 mv back/gwmpdBack /usr/bin
@@ -42,12 +58,6 @@ Create log directory and change /var/log/gwmpd right with chown:
 ```sh
 mkdir -p /var/log/gwmpd
 chown your_user: /var/log/gwmpd
-```
-
-### Frontend
-After building, move all files in your root server. For example:
-```sh
-mv front/* /var/www
 ```
 
 ## Config

@@ -2,6 +2,11 @@ package main
 
 import "sync"
 
+type login struct {
+	Username string `form:"username" json:"username" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
+}
+
 type com struct {
 	cmdToConsumeChan chan []byte
 	mpdResponseChan  chan []byte

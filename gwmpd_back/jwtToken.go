@@ -6,11 +6,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type login struct {
-	Username string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
-}
-
 // func authenticator(userID string, password string, c *gin.Context) (interface{}, bool) {
 func authenticator(c *gin.Context) (interface{}, error) {
 	var loginVals login
