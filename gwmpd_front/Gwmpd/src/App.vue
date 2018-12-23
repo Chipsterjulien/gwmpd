@@ -37,8 +37,10 @@
         </b-row>
       </b-container>
 
-      <div v-if="getStatus.error !== ''">
-        Error: {{ getStatus.error }}
+      <div class="listenAlert" v-if="getStatus.error !== ''">
+        <b-alert show variant="danger">
+          <p><strong>{{ getStatus.error }}</strong></p>
+        </b-alert>
       </div>
     </div>
     <div v-else>
@@ -86,17 +88,6 @@ export default {
     }
   },
   methods: {
-    refresh () {
-      this.$auth.refresh({
-        success: function (response) {
-          this.$auth.token(null, response.data.token)
-          sessionStorage.token = response.data.token
-        },
-        error: function (e) {
-          delete sessionStorage.token
-        }
-      })
-    },
     ...mapActions([
       'setAllStatus',
       'setConnectionStatus',
@@ -105,12 +96,6 @@ export default {
       'setPlaylist',
       'setState'
     ]),
-    toggleMuteVolume () {
-      this.axios.put('v1/toggleMuteVolume')
-        .then(response => {
-          this.setVolume(response.data.volume)
-        })
-    },
     forwardSong () {
       this.axios.get('v1/nextSong')
     },
@@ -134,6 +119,23 @@ export default {
     },
     previousSong () {
       this.axios.get('v1/previousSong')
+    },
+    refresh () {
+      this.$auth.refresh({
+        success: function (response) {
+          this.$auth.token(null, response.data.token)
+          sessionStorage.token = response.data.token
+        },
+        error: function (e) {
+          delete sessionStorage.token
+        }
+      })
+    },
+    toggleMuteVolume () {
+      this.axios.put('v1/toggleMuteVolume')
+        .then(response => {
+          this.setVolume(response.data.volume)
+        })
     },
     stopSong () {
       if (this.getStatus.state !== 'stop') {
@@ -194,6 +196,10 @@ export default {
   }
 
   #app {
+    .listenAlert {
+      margin-top: 30px;
+      margin-bottom: -20px;
+    }
     .myNavBar {
       padding-bottom: 20px;
     }
