@@ -1,6 +1,8 @@
 # gwmpd
 MPD Web GUI - written in Go (multithread/async)
 
+![Sceenshot](https://github.com/Chipsterjulien/gwmpd/blob/master/screenshot.png)
+
 There are 2 parts:
 * the backend which written in Go. It communicates with mpd and web GUI
 * the frontend which written in JS (vuejs)
