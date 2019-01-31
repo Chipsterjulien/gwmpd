@@ -17,7 +17,7 @@
         <template slot="button" slot-scope="data">
           <div class="alignButtonInTable">
             <b-button v-b-tooltip.hover.top title="Go inside" @click="checkFilesList(data.item.Name)" class="icon-visibility buttonMarginRight"></b-button>
-            <b-button v-b-tooltip.hover.top title="Add folder to the current playlist" @click="addSongToCurrentPlaylist(data.item.Name)" class="icon-queue_music"></b-button>
+            <b-button v-b-tooltip.hover.top title="Add folder to the current playlist" @click="addSongToCurrentPlaylist(data.item.Name)" class="icon-queue_music buttonSpaceAfterIconQueue"></b-button>
             <b-button v-b-tooltip.hover.top title="Replace the current playlist by this folder" @click="replaceCurrentPlaylist(data.item.Name)" class="icon-add"></b-button>
           </div>
         </template>
@@ -35,7 +35,7 @@
         </template>
         <template slot="addSong" slot-scope="data">
           <div class="alignButtonInTable">
-            <b-button v-b-tooltip.hover.top title="Add music to the current playlist" @click="addSongToCurrentPlaylist(data.item.File)" class="icon-queue_music"></b-button>
+            <b-button v-b-tooltip.hover.top title="Add music to the current playlist" @click="addSongToCurrentPlaylist(data.item.File)" class="icon-queue_music buttonSpaceAfterIconQueue"></b-button>
             <b-button v-b-tooltip.hover.top title="Replace the current playlist by this music" @click="replaceCurrentPlaylist(data.item.File)" class="icon-add"></b-button>
           </div>
         </template>
@@ -185,6 +185,11 @@ export default {
     }
   },
   mounted () {
+    if (localStorage.url !== 'undefined') {
+      this.url = localStorage.url
+      this.axios.defaults.baseURL = this.url
+    }
+
     this.setCurrentView('LocalMusicsView')
     this.getPlaylist()
     this.getFilesList()
@@ -198,7 +203,13 @@ export default {
   }
 
   .alignButtonInTable {
+    display: flex;
+    flex-direction: row;
     float: right;
+  }
+
+  .buttonSpaceAfterIconQueue {
+    margin-right: 6px;
   }
 
   .buttonMarginRight {

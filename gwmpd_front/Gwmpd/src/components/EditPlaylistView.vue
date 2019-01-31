@@ -265,6 +265,11 @@ export default {
     }
   },
   mounted () {
+    if (localStorage.url !== 'undefined') {
+      this.url = localStorage.url
+      this.axios.defaults.baseURL = this.url
+    }
+
     this.setCurrentView('EditPlaylistView')
 
     this.playlistName = this.$route.params.playlistName
