@@ -7,9 +7,9 @@ ip = "localhost"
 port = 6600
 
 [ginserver]
+# In production, in order to secure your app, you should use 127.0.0.1
+ip = ""
 port = 8060
 jwtSecretKey = "secret key"
 login = "admin"
 password = "admin"
-pem = ""
-key = ""
