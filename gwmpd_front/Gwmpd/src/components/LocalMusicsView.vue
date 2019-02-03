@@ -209,7 +209,7 @@ export default {
   }
 
   .buttonSpaceAfterIconQueue {
-    margin-right: 6px;
+    margin-right: 4px;
   }
 
   .buttonMarginRight {
