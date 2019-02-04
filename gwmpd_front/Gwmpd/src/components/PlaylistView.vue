@@ -107,6 +107,8 @@ export default {
     padding-bottom: 5px;
   }
 
+  // J'ai un changement de taille à 396px et ça part en sucette à ce moment là
+
   .alignButtonInTable {
     display: flex;
     flex-direction: row;
